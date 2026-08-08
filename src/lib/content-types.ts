@@ -8,6 +8,11 @@ export interface BaseFrontmatter {
   draft?: boolean;
 }
 
+export interface HomeFrontmatter extends BaseFrontmatter {
+  role: string;
+  tagline: string;
+}
+
 export interface BlogFrontmatter extends BaseFrontmatter {
   date: string;
   tags?: string[];

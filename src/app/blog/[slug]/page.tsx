@@ -8,6 +8,7 @@ import { ScrollProgress } from "@/components/blog/scroll-progress";
 import { PostListItem } from "@/components/blog/post-list-item";
 import { MDXContent, extractToc } from "@/lib/mdx";
 import { getAllPosts, getPostBySlug, getRelatedPosts } from "@/lib/content";
+import { buildBacklinkIndex, buildSlugMap } from "@/lib/backlinks";
 import { formatDate } from "@/lib/format-date";
 import { siteConfig } from "@/lib/config";
 
@@ -57,6 +58,9 @@ export default async function BlogPostPage({
 
   const toc = extractToc(post.content);
   const related = getRelatedPosts(slug, 3);
+  const slugMap = buildSlugMap();
+  const backlinkIndex = buildBacklinkIndex();
+  const backlinks = backlinkIndex[slug] ?? [];
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -99,8 +103,31 @@ export default async function BlogPostPage({
           </header>
 
           <div className="prose-article max-w-none pb-16">
-            <MDXContent source={post.content} />
+            <MDXContent source={post.content} slugMap={slugMap} />
           </div>
+
+          {backlinks.length > 0 && (
+            <section className="border-t border-border py-10">
+              <h2 className="mb-4 font-mono text-xs uppercase tracking-widest text-ink-faint">
+                Referenced by
+              </h2>
+              <ul className="space-y-2">
+                {backlinks.map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      className="text-sm text-ink-muted hover:text-accent"
+                    >
+                      {link.title}
+                      <span className="ml-2 font-mono text-xs text-ink-faint">
+                        {link.type}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           {related.length > 0 && (
             <section className="border-t border-border pt-10">

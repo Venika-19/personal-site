@@ -3,12 +3,13 @@ import { ArrowUpRight } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { PostListItem } from "@/components/blog/post-list-item";
 import { Tag } from "@/components/ui/tag";
-import { getAllPosts, getFeaturedProjects } from "@/lib/content";
+import { getAllPosts, getFeaturedProjects, getHomePage } from "@/lib/content";
 import { siteConfig } from "@/lib/config";
 
 export default function HomePage() {
   const posts = getAllPosts().slice(0, 4);
   const featured = getFeaturedProjects().slice(0, 3);
+  const home = getHomePage();
 
   return (
     <>
@@ -16,14 +17,13 @@ export default function HomePage() {
       <Container>
         <section className="flex min-h-[60vh] flex-col justify-center pb-16 pt-24">
           <p className="mb-4 font-mono text-xs uppercase tracking-widest text-accent">
-            [Your Role / Title]
+            {home?.frontmatter.role ?? "[Your Role / Title]"}
           </p>
           <h1 className="max-w-3xl font-display text-5xl font-semibold leading-[1.05] tracking-tight text-ink md:text-6xl">
             {siteConfig.name}
           </h1>
           <p className="mt-6 max-w-xl text-lg text-ink-muted">
-            [Your one- or two-sentence positioning statement. What you build,
-            what you write about, and who it&apos;s for.]
+            {home?.frontmatter.tagline ?? "[Your one- or two-sentence intro.]"}
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-4">
             <Link

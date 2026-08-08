@@ -6,18 +6,16 @@
  */
 
 export const siteConfig = {
-  name: "[Your Name]",
-  initials: "[YN]",
-  title: "[Your Name] — [Your Role / Tagline]",
+  name: "Venika Sruthi",
+  initials: "VS",
+  title: "Venika Sruthi — Software Engineer",
   description:
-    "[A one- to two-sentence description of who you are and what this site is about. Used for SEO and social previews.]",
-  url: "https://example.com",
+    "Software Engineer II at Harness. Writing about engineering, ideas, and everything in between.",
+  url: "https://byvenika.com",
   locale: "en-US",
-  email: "[your-email@example.com]",
+  email: "venikasruthi19@gmail.com",
   social: {
-    github: "https://github.com/[your-handle]",
-    twitter: "https://twitter.com/[your-handle]",
-    linkedin: "https://linkedin.com/in/[your-handle]",
+    linkedin: "https://www.linkedin.com/in/venika-sruthi/",
     rss: "/rss.xml",
   },
   nav: [
@@ -28,7 +26,6 @@ export const siteConfig = {
     { label: "Now", href: "/now" },
   ],
   footerLinks: [
-    { label: "Uses", href: "/uses" },
     { label: "Reading", href: "/reading" },
     { label: "Photography", href: "/photography" },
     { label: "Contact", href: "/contact" },
@@ -42,7 +39,7 @@ export const siteConfig = {
   analytics: {
     // Replace with your analytics provider's site id / token, e.g. Plausible, Vercel Analytics.
     provider: "plausible",
-    domain: "example.com",
+    domain: "byvenika.com",
     enabled: false,
   },
 } as const;

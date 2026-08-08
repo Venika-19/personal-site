@@ -8,6 +8,7 @@ import rehypeKatex from "rehype-katex";
 import { CodeBlock } from "@/components/blog/code-block";
 import { Mermaid } from "@/components/blog/mermaid";
 import { Callout } from "@/components/blog/callout";
+import { remarkWikilinks } from "@/lib/backlinks";
 
 const prettyCodeOptions = {
   theme: {
@@ -27,14 +28,20 @@ const mdxComponents = {
   Callout,
 };
 
-export function MDXContent({ source }: { source: string }) {
+export function MDXContent({
+  source,
+  slugMap,
+}: {
+  source: string;
+  slugMap?: Record<string, { url: string; title: string }>;
+}) {
   return (
     <MDXRemote
       source={source}
       components={mdxComponents}
       options={{
         mdxOptions: {
-          remarkPlugins: [remarkGfm, remarkMath],
+          remarkPlugins: [remarkGfm, remarkMath, remarkWikilinks(slugMap ?? {})],
           rehypePlugins: [
             rehypeSlug,
             [rehypeAutolinkHeadings, { behavior: "wrap" }],

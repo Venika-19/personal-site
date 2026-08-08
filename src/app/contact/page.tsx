@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Mail } from "lucide-react";
-import { GithubIcon, TwitterIcon, LinkedinIcon } from "@/components/ui/brand-icons";
+import { LinkedinIcon } from "@/components/ui/brand-icons";
 import { Container } from "@/components/layout/container";
 import { PageHeader } from "@/components/layout/page-header";
 import { ContactForm } from "@/components/contact-form";
@@ -27,22 +27,6 @@ export default function ContactPage() {
           className="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-accent"
         >
           <Mail size={14} /> {siteConfig.email}
-        </a>
-        <a
-          href={siteConfig.social.github}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-accent"
-        >
-          <GithubIcon /> GitHub
-        </a>
-        <a
-          href={siteConfig.social.twitter}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-accent"
-        >
-          <TwitterIcon /> Twitter
         </a>
         <a
           href={siteConfig.social.linkedin}

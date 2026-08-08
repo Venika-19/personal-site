@@ -6,6 +6,7 @@ import type {
   BaseFrontmatter,
   BlogFrontmatter,
   ContentEntry,
+  HomeFrontmatter,
   NoteFrontmatter,
   ProjectFrontmatter,
 } from "./content-types";
@@ -160,6 +161,10 @@ export function getFeaturedProjects() {
 
 export function getPage(slug: string) {
   return getEntryBySlug<BaseFrontmatter>("pages", slug);
+}
+
+export function getHomePage() {
+  return getEntryBySlug<HomeFrontmatter>("pages", "home");
 }
 
 // ---------- Search index (used by the command palette + search page) ----------
