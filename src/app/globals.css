@@ -127,8 +127,11 @@ body::before {
   z-index: 40;
   overflow: hidden;
 }
-/* Enable clicks anywhere on the branch SVG */
+/* Branch SVG blocks pointer events; only blossom hit areas re-enable them */
 .leaf-decor svg {
+  pointer-events: none;
+}
+.blossom-hit {
   pointer-events: all;
   cursor: pointer;
 }
