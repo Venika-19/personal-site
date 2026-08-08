@@ -3,117 +3,146 @@
 import { useCallback, useState } from "react";
 
 interface FallingPetal {
-  id: number;
-  x: number;
-  y: number;
-  drift: string;
-  spin: string;
-  duration: string;
-  delay: string;
-  scale: number;
+  id: number; x: number; y: number;
+  drift: string; spin: string;
+  duration: string; delay: string; scale: number;
 }
 
 let nextId = 0;
 
-function BlossomCloud({ cx, cy, r = 28, op = 0.52 }: { cx: number; cy: number; r?: number; op?: number }) {
-  const spots: [number, number, number][] = [
-    [0, 0, 1.0], [-r*0.4, -r*0.3, 0.78], [r*0.4, -r*0.25, 0.82],
-    [-r*0.2, r*0.38, 0.72], [r*0.35, r*0.30, 0.74], [-r*0.5, r*0.08, 0.68],
-    [r*0.12, -r*0.48, 0.70], [r*0.52, r*0.12, 0.62], [-r*0.08, -r*0.52, 0.64],
-    [r*0.25, -r*0.42, 0.60], [-r*0.38, r*0.35, 0.66],
-  ];
+// 5-petal blossom
+function Blossom({ x, y, s = 1, op = 0.55, rot = 0 }: {
+  x: number; y: number; s?: number; op?: number; rot?: number;
+}) {
   return (
-    <g opacity={op} filter="url(#wc)">
-      {spots.map(([dx, dy, sr], i) => (
-        <circle key={i} cx={cx+dx} cy={cy+dy} r={r * sr * 0.58} fill="#f0a0b8" opacity={0.52 + (i%3)*0.1} />
+    <g transform={`translate(${x},${y}) rotate(${rot}) scale(${s})`} opacity={op}>
+      {[0, 72, 144, 216, 288].map((a) => (
+        <ellipse key={a} cx={0} cy={-7} rx={3.8} ry={6.2}
+          fill="#f2a8bc" transform={`rotate(${a})`} opacity="0.88" />
       ))}
-      <circle cx={cx} cy={cy} r={r*0.22} fill="#d4708a" opacity={0.18} />
+      {[0, 60, 120, 180, 240, 300].map((a) => (
+        <g key={a}>
+          <line
+            x1="0" y1="0"
+            x2={+(Math.sin(a * Math.PI / 180) * 5).toFixed(2)}
+            y2={-(Math.cos(a * Math.PI / 180) * 5).toFixed(2)}
+            stroke="#e8a0b0" strokeWidth="0.5" opacity="0.60"
+          />
+          <circle
+            cx={+(Math.sin(a * Math.PI / 180) * 5.5).toFixed(2)}
+            cy={-(Math.cos(a * Math.PI / 180) * 5.5).toFixed(2)}
+            r="0.9" fill="#7a6248" opacity="0.75"
+          />
+        </g>
+      ))}
+      <circle cx="0" cy="0" r="2" fill="#fbd8e4" opacity="0.90" />
     </g>
   );
 }
 
-function SakuraSvg({ onHit }: { onHit: (e: React.MouseEvent, cx: number, cy: number) => void }) {
-  // viewBox: 280 wide × 900 tall. Trunk enters from left edge around y=500,
-  // grows upward and branches spread inward (rightward) and upward.
-  const clouds: [number, number, number, number][] = [
-    // Upper canopy — branches spread right and up from ~y=280 upward
-    [180, 80,  30, 0.50], [220, 55,  26, 0.46], [145, 60,  28, 0.48],
-    [255, 90,  24, 0.42], [275, 55,  22, 0.40], [105, 95,  26, 0.46],
-    [200, 120, 25, 0.44], [160, 130, 27, 0.46], [240, 130, 22, 0.40],
-    [270, 110, 20, 0.38], [80,  130, 24, 0.42], [125, 155, 25, 0.44],
-    [185, 168, 23, 0.40], [225, 165, 21, 0.38], [55,  165, 22, 0.40],
-    // Mid section along trunk
-    [100, 220, 24, 0.42], [145, 230, 22, 0.38], [55,  245, 20, 0.36],
-    [175, 255, 20, 0.36], [30,  285, 18, 0.32],
-    // Lower branch
-    [80,  340, 22, 0.38], [120, 355, 20, 0.34], [40,  365, 18, 0.32],
-    [155, 370, 18, 0.30],
-  ];
+const NODES: { cx: number; cy: number; s: number; op: number }[] = [
+  // Crown
+  { cx: 195, cy: 28,  s: 1.05, op: 0.58 },
+  { cx: 242, cy: 15,  s: 0.90, op: 0.52 },
+  { cx: 158, cy: 20,  s: 0.95, op: 0.54 },
+  { cx: 268, cy: 44,  s: 0.82, op: 0.46 },
+  { cx: 218, cy: 58,  s: 0.88, op: 0.50 },
+  { cx: 130, cy: 50,  s: 0.85, op: 0.48 },
+  { cx: 178, cy: 78,  s: 0.92, op: 0.52 },
+  { cx: 252, cy: 82,  s: 0.80, op: 0.44 },
+  { cx: 100, cy: 78,  s: 0.82, op: 0.46 },
+  { cx: 150, cy: 98,  s: 0.88, op: 0.50 },
+  { cx: 215, cy: 105, s: 0.78, op: 0.42 },
+  { cx: 70,  cy: 102, s: 0.80, op: 0.44 },
+  { cx: 122, cy: 128, s: 0.85, op: 0.48 },
+  { cx: 178, cy: 136, s: 0.76, op: 0.40 },
+  // Mid
+  { cx: 44,  cy: 145, s: 0.78, op: 0.42 },
+  { cx: 94,  cy: 162, s: 0.82, op: 0.44 },
+  { cx: 148, cy: 170, s: 0.74, op: 0.38 },
+  { cx: 22,  cy: 182, s: 0.72, op: 0.38 },
+  { cx: 65,  cy: 208, s: 0.78, op: 0.40 },
+  { cx: 120, cy: 216, s: 0.70, op: 0.36 },
+  // Lower
+  { cx: 34,  cy: 278, s: 0.75, op: 0.40 },
+  { cx: 85,  cy: 292, s: 0.70, op: 0.36 },
+  { cx: 132, cy: 305, s: 0.68, op: 0.34 },
+  { cx: 16,  cy: 328, s: 0.68, op: 0.36 },
+  { cx: 70,  cy: 352, s: 0.72, op: 0.38 },
+];
 
+// Each node gets a small deterministic cluster of blossoms around it
+const OFFSETS = [
+  [0, 0, 1.0, 0], [12, -9, 0.82, 22], [-11, -7, 0.85, -18],
+  [15, 7, 0.76, 40], [-8, 13, 0.80, -32], [9, -16, 0.72, 55],
+];
+
+function SakuraSvg({ onHit }: { onHit: (e: React.MouseEvent, cx: number, cy: number) => void }) {
   return (
-    <svg viewBox="0 0 280 900" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+    <svg viewBox="-25 0 305 900" fill="none" xmlns="http://www.w3.org/2000/svg"
+      className="w-full h-full" style={{ overflow: "visible" }}>
+
       <defs>
-        <filter id="wc" x="-40%" y="-40%" width="180%" height="180%">
-          <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="4" seed="5" result="noise" />
-          <feDisplacementMap in="SourceGraphic" in2="noise" scale="5" xChannelSelector="R" yChannelSelector="G" result="warped" />
-          <feGaussianBlur in="warped" stdDeviation="2.2" />
-        </filter>
-        <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
-          <feGaussianBlur stdDeviation="5" />
+        {/* Makes stroke edges slightly softer / organic */}
+        <filter id="taper" x="-10%" y="-10%" width="120%" height="120%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.065" numOctaves="2" seed="8" result="n" />
+          <feDisplacementMap in="SourceGraphic" in2="n" scale="1.2" xChannelSelector="R" yChannelSelector="G" />
         </filter>
       </defs>
 
-      {/* ── Trunk: enters from left edge ~y=520, grows upward curving right ── */}
-      <path d="M0 520 C18 480, 30 420, 45 350 C58 285, 68 220, 82 155 C92 105, 105 65, 118 30"
-        stroke="#7a6248" strokeWidth="3.2" strokeLinecap="round" opacity="0.48" />
+      {/* ── TRUNK — thick at base, tapers up ── */}
+      {/* Drawn as 3 overlapping strokes of decreasing width = tapered look */}
+      <path d="M0 560 C14 500, 26 435, 40 365 C52 298, 64 228, 78 162 C88 112, 100 68, 110 28"
+        stroke="#7a5c3a" strokeWidth="9" strokeLinecap="round" fill="none" opacity="0.28" filter="url(#taper)" />
+      <path d="M0 560 C14 500, 26 435, 40 365 C52 298, 64 228, 78 162 C88 112, 100 68, 110 28"
+        stroke="#7a5c3a" strokeWidth="5.5" strokeLinecap="round" fill="none" opacity="0.38" filter="url(#taper)" />
+      <path d="M0 560 C14 500, 26 435, 40 365 C52 298, 64 228, 78 162 C88 112, 100 68, 110 28"
+        stroke="#6a4e2e" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.48" filter="url(#taper)" />
 
-      {/* Main upward bough — sweeps right */}
-      <path d="M60 310 C95 270, 140 220, 185 170 C220 130, 255 95, 275 60"
-        stroke="#7a6248" strokeWidth="2.2" strokeLinecap="round" opacity="0.40" />
-      {/* Second bough — also right but lower angle */}
-      <path d="M72 260 C108 230, 152 200, 192 168 C225 142, 255 118, 272 92"
-        stroke="#7a6248" strokeWidth="1.8" strokeLinecap="round" opacity="0.36" />
-      {/* Left bough — goes up-left, shorter */}
-      <path d="M88 200 C72 168, 52 138, 28 108 C14 88, 2 68, -5 48"
-        stroke="#7a6248" strokeWidth="1.6" strokeLinecap="round" opacity="0.34" />
-      {/* Upper twig off main trunk */}
-      <path d="M100 140 C125 108, 155 80, 175 52"
-        stroke="#7a6248" strokeWidth="1.2" strokeLinecap="round" opacity="0.30" />
-      <path d="M110 105 C88 85, 65 65, 45 40"
-        stroke="#7a6248" strokeWidth="1.0" strokeLinecap="round" opacity="0.28" />
-      {/* Thin twigs */}
-      <path d="M145 192 C162 170, 178 148, 190 122"
-        stroke="#7a6248" strokeWidth="0.9" strokeLinecap="round" opacity="0.26" />
-      <path d="M115 225 C100 205, 82 185, 62 165"
-        stroke="#7a6248" strokeWidth="0.8" strokeLinecap="round" opacity="0.24" />
-      {/* Lower branch off trunk */}
-      <path d="M38 380 C65 358, 98 340, 130 320"
-        stroke="#7a6248" strokeWidth="1.4" strokeLinecap="round" opacity="0.32" />
-      <path d="M28 420 C8 400, -8 380, -12 358"
-        stroke="#7a6248" strokeWidth="1.0" strokeLinecap="round" opacity="0.26" />
-
-      {/* ── Ambient glow beneath clusters ── */}
-      {clouds.map(([cx, cy, r, op], i) => (
-        <circle key={`g${i}`} cx={cx} cy={cy} r={r*1.6} fill="#f8c0d0" opacity={op*0.15} filter="url(#glow)" />
+      {/* ── BOUGHS — same layered taper technique ── */}
+      {[
+        // [path, baseW, midW, topW, opacity]
+        ["M55 328 C88 285, 132 238, 178 190 C212 152, 250 112, 270 76", 7, 4, 1.8, 0.46],
+        ["M65 275 C100 248, 146 218, 186 186 C220 158, 252 130, 270 102", 6, 3.5, 1.5, 0.42],
+        ["M80 215 C64 182, 44 150, 22 120 C8 100, -4 78, -10 54", 5.5, 3.2, 1.4, 0.40],
+        ["M95 158 C98 122, 102 84, 108 44", 4.5, 2.8, 1.2, 0.36],
+      ].map(([p, w0, w1, w2, op], i) => (
+        <g key={i}>
+          <path d={p as string} stroke="#7a5c3a" strokeWidth={w0 as number} strokeLinecap="round" fill="none" opacity={(op as number) * 0.55} filter="url(#taper)" />
+          <path d={p as string} stroke="#7a5c3a" strokeWidth={w1 as number} strokeLinecap="round" fill="none" opacity={(op as number) * 0.75} filter="url(#taper)" />
+          <path d={p as string} stroke="#6a4e2e" strokeWidth={w2 as number} strokeLinecap="round" fill="none" opacity={op as number} filter="url(#taper)" />
+        </g>
       ))}
 
-      {/* ── Watercolor blossom clouds ── */}
-      {clouds.map(([cx, cy, r, op], i) => (
-        <BlossomCloud key={i} cx={cx} cy={cy} r={r} op={op} />
+      {/* ── TWIGS — single tapered stroke, thin ── */}
+      {[
+        ["M120 252 C140 222, 158 194, 170 164", 2.8, 0.32],
+        ["M142 202 C160 178, 178 155, 195 130", 2.4, 0.30],
+        ["M108 170 C88 150, 66 130, 48 110", 2.2, 0.30],
+        ["M92 134 C72 114, 50 94, 32 74", 2.0, 0.28],
+        ["M105 104 C120 82, 138 64, 152 44", 2.0, 0.28],
+        ["M112 76 C95 60, 76 44, 60 28", 1.8, 0.26],
+        ["M40 382 C66 360, 96 342, 126 324", 2.8, 0.34],
+        ["M28 425 C10 405, -6 385, -12 362", 2.2, 0.28],
+        ["M35 458 C57 440, 80 424, 106 410", 2.2, 0.28],
+        ["M48 488 C28 470, 10 452, -5 432", 1.8, 0.24],
+      ].map(([p, w, op], i) => (
+        <g key={i}>
+          <path d={p as string} stroke="#7a5c3a" strokeWidth={(w as number) * 1.8} strokeLinecap="round" fill="none" opacity={(op as number) * 0.45} filter="url(#taper)" />
+          <path d={p as string} stroke="#6a4e2e" strokeWidth={w as number} strokeLinecap="round" fill="none" opacity={op as number} filter="url(#taper)" />
+        </g>
       ))}
 
-      {/* ── Hit areas ── */}
-      {clouds.map(([cx, cy], i) => (
-        <circle key={`h${i}`} cx={cx} cy={cy} r={40} fill="transparent"
-          className="sakura-hit" onClick={(e) => onHit(e, cx, cy)} />
-      ))}
-
-      {/* Drifting loose petals */}
-      {([
-        [155,145,11,0.22],[70,175,10,0.20],[210,195,9,0.18],
-        [45,310,10,0.20],[130,290,9,0.18],[168,320,8,0.16],
-      ] as [number,number,number,number][]).map(([x,y,r,op],i) => (
-        <circle key={`lp${i}`} cx={x} cy={y} r={r} fill="#f0a0b8" opacity={op} filter="url(#wc)" />
+      {/* ── BLOSSOMS ── */}
+      {NODES.map(({ cx, cy, s, op }, ni) => (
+        <g key={ni}>
+          {OFFSETS.map(([dx, dy, sr, rot], bi) => (
+            <Blossom key={bi} x={cx + dx} y={cy + dy}
+              s={s * (sr as number)} op={op * (0.85 + bi * 0.05)} rot={rot as number} />
+          ))}
+          <circle cx={cx} cy={cy} r={32} fill="transparent"
+            className="sakura-hit" onClick={(e) => onHit(e, cx, cy)} />
+        </g>
       ))}
     </svg>
   );
@@ -126,17 +155,17 @@ export function SakuraCorner() {
     const svg = (e.target as Element).closest("svg") as SVGSVGElement | null;
     if (!svg) return;
     const rect = svg.getBoundingClientRect();
-    const pageX = rect.left + (svgX / 280) * rect.width;
+    const pageX = rect.left + ((svgX + 25) / 305) * rect.width;
     const pageY = rect.top  + (svgY / 900) * rect.height;
 
     const count = 4 + Math.floor(Math.random() * 4);
     const newPetals: FallingPetal[] = Array.from({ length: count }, (_, i) => ({
       id: nextId++,
-      x: pageX + (Math.random() - 0.5) * 22,
-      y: pageY + (Math.random() - 0.5) * 12,
+      x: pageX + (Math.random() - 0.5) * 20,
+      y: pageY + (Math.random() - 0.5) * 10,
       drift: `${(Math.random() - 0.5) * 85}px`,
       spin: `${(Math.random() > 0.5 ? 1 : -1) * (140 + Math.random() * 260)}deg`,
-      duration: `${2.2 + Math.random() * 1.6}s`,
+      duration: `${2.2 + Math.random() * 1.4}s`,
       delay: `${i * 0.07 + Math.random() * 0.18}s`,
       scale: 0.45 + Math.random() * 0.5,
     }));
@@ -158,11 +187,10 @@ export function SakuraCorner() {
       </div>
 
       {petals.map(p => (
-        <svg key={p.id} width="18" height="18" viewBox="-9 -9 18 18"
+        <svg key={p.id} width="20" height="20" viewBox="-10 -10 20 20"
           style={{
             position: "fixed",
-            left: p.x,
-            top: p.y,
+            left: p.x, top: p.y,
             pointerEvents: "none",
             zIndex: 9999,
             ["--petal-drift" as string]: p.drift,
@@ -172,8 +200,8 @@ export function SakuraCorner() {
             scale: String(p.scale),
           }}
         >
-          <ellipse cx="0" cy="0" rx="5" ry="7" fill="#f0a0b8" opacity="0.80" />
-          <ellipse cx="0" cy="0" rx="2" ry="3" fill="#f8c8d8" opacity="0.55" />
+          <ellipse cx="0" cy="-5" rx="3.5" ry="5.5" fill="#f2a8bc" opacity="0.85" />
+          <circle cx="0" cy="0" r="1.5" fill="#fbd8e4" opacity="0.70" />
         </svg>
       ))}
     </>
