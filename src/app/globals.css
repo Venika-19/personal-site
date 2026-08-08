@@ -97,6 +97,29 @@ body {
   color: var(--color-ink);
 }
 
+@keyframes petal-fall {
+  0%   { transform: translate(0,0) rotate(0deg); opacity: 0.75; }
+  70%  { opacity: 0.4; }
+  100% { transform: translate(var(--petal-drift), 480px) rotate(var(--petal-spin)); opacity: 0; }
+}
+
+.sakura-corner {
+  position: fixed;
+  top: 0;
+  pointer-events: none;
+  z-index: 40;
+  width: 340px;
+  height: 420px;
+}
+.sakura-corner-left  { left: 0; }
+.sakura-corner-right { right: 0; transform: scaleX(-1); }
+.sakura-corner svg   { pointer-events: none; }
+.sakura-hit          { pointer-events: all; cursor: pointer; }
+
+@media (max-width: 1100px) {
+  .sakura-corner { display: none; }
+}
+
 /* Background colour blobs */
 body::before {
   content: "";

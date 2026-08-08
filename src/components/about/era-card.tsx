@@ -17,7 +17,7 @@ export function Era({
         </span>
         <span className="font-mono text-xs text-ink-faint">{period}</span>
       </div>
-      <div className="text-sm leading-relaxed text-ink-muted">{children}</div>
+      <div className="text-base leading-relaxed text-ink-muted">{children}</div>
     </div>
   );
 }
