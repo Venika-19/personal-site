@@ -124,8 +124,13 @@ body::before {
   bottom: 0;
   width: 200px;
   pointer-events: none;
-  z-index: 0;
+  z-index: 40;
   overflow: hidden;
+}
+/* Enable clicks anywhere on the branch SVG */
+.leaf-decor svg {
+  pointer-events: all;
+  cursor: pointer;
 }
 .leaf-decor-left  { left: 0; }
 .leaf-decor-right { right: 0; }
