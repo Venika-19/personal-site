@@ -10,6 +10,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
+import { LeafDecor } from "@/components/layout/leaf-decor";
 import { CommandPalette } from "@/components/command/command-palette";
 import { getSearchIndex } from "@/lib/content";
 import { siteConfig } from "@/lib/config";
@@ -88,6 +89,7 @@ export default function RootLayout({
           >
             Skip to content
           </a>
+          <LeafDecor />
           <SiteHeader />
           <main id="main" className="flex-1">
             {children}

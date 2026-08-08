@@ -1,19 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  --color-bg: #faf5f2;
-  --color-bg-raised: #fefcfa;
-  --color-bg-tint: #f5ede8;
+  --color-bg: #faf6f4;
+  --color-bg-raised: #fffefd;
+  --color-bg-tint: #f5ece7;
   --color-ink: #1c1a17;
   --color-ink-muted: #5a5248;
   --color-ink-faint: #9a8f84;
-  --color-border: #ecddd6;
-  --color-border-strong: #d9c4b8;
-  --color-accent: #8b7355;
-  --color-accent-soft: #f0e8df;
-  --color-accent-pink: #e8a598;
-  --color-accent-olive: #7a8c5a;
-  --color-code-bg: #f2ede8;
+  --color-border: #e8d8d0;
+  --color-border-strong: #d4bfb4;
+  --color-accent: #6b7c4a;
+  --color-accent-soft: #edf2e0;
+  --color-accent-pink: #d4907e;
+  --color-accent-olive: #6b7c4a;
+  --color-code-bg: #f2ece8;
 
   --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
   --font-body: var(--font-source-serif), ui-serif, Georgia, serif;
@@ -29,14 +29,14 @@
 .dark {
   --color-bg: #0e0d0b;
   --color-bg-raised: #161410;
-  --color-bg-tint: #1e1c16;
+  --color-bg-tint: #1a1c14;
   --color-ink: #f0ece5;
   --color-ink-muted: #b0a898;
   --color-ink-faint: #6b6358;
   --color-border: #2a2720;
   --color-border-strong: #3d3830;
-  --color-accent: #c4a882;
-  --color-accent-soft: #2a2318;
+  --color-accent: #9aad72;
+  --color-accent-soft: #1e2416;
   --color-accent-pink: #c9897c;
   --color-accent-olive: #9aad72;
   --color-code-bg: #141210;
@@ -97,7 +97,7 @@ body {
   color: var(--color-ink);
 }
 
-/* Faint decorative background blobs */
+/* Background colour blobs */
 body::before {
   content: "";
   position: fixed;
@@ -105,9 +105,27 @@ body::before {
   pointer-events: none;
   z-index: -1;
   background:
-    radial-gradient(ellipse 60% 40% at 15% 20%, color-mix(in srgb, var(--color-accent-pink) 12%, transparent) 0%, transparent 70%),
-    radial-gradient(ellipse 50% 35% at 85% 70%, color-mix(in srgb, var(--color-accent-olive) 8%, transparent) 0%, transparent 70%),
-    radial-gradient(ellipse 40% 30% at 60% 10%, color-mix(in srgb, var(--color-accent-pink) 6%, transparent) 0%, transparent 70%);
+    radial-gradient(ellipse 80% 60% at 5% 15%, color-mix(in srgb, var(--color-accent-pink) 18%, transparent) 0%, transparent 65%),
+    radial-gradient(ellipse 70% 50% at 95% 75%, color-mix(in srgb, var(--color-accent-olive) 14%, transparent) 0%, transparent 65%),
+    radial-gradient(ellipse 55% 45% at 70% 5%, color-mix(in srgb, var(--color-accent-pink) 10%, transparent) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 40% at 20% 90%, color-mix(in srgb, var(--color-accent-olive) 10%, transparent) 0%, transparent 65%);
+}
+
+/* Leaf decorations — fixed to viewport sides */
+.leaf-decor {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: 200px;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.leaf-decor-left  { left: 0; }
+.leaf-decor-right { right: 0; transform: scaleX(-1); }
+
+@media (max-width: 1280px) {
+  .leaf-decor { display: none; }
 }
 
 :focus-visible {
