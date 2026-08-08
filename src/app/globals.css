@@ -106,10 +106,10 @@ body {
 .sakura-corner {
   position: fixed;
   top: 0;
+  bottom: 0;
   pointer-events: none;
   z-index: 40;
-  width: 340px;
-  height: 420px;
+  width: 280px;
 }
 .sakura-corner-left  { left: 0; }
 .sakura-corner-right { right: 0; transform: scaleX(-1); }
