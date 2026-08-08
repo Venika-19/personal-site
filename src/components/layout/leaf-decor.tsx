@@ -15,114 +15,140 @@ interface FallingPetal {
 
 let nextId = 0;
 
-const PETAL = "M0,-9 C2,-9 5.5,-6 5.5,-2.5 C5.5,1 3,4.5 0,5.5 C-3,4.5 -5.5,1 -5.5,-2.5 C-5.5,-6 -2,-9 0,-9 Z";
+const PETAL = "M0,-8 C2,-8 5,-5.5 5,-2 C5,1.5 3,4 0,5 C-3,4 -5,1.5 -5,-2 C-5,-5.5 -2,-8 0,-8 Z";
 
-function Blossom({ x, y, r = 1, opacity = 0.55, rotate = 0 }: {
+function Blossom({ x, y, r = 1, opacity = 0.45, rotate = 0 }: {
   x: number; y: number; r?: number; opacity?: number; rotate?: number;
 }) {
   return (
     <g transform={`translate(${x},${y}) scale(${r}) rotate(${rotate})`} opacity={opacity}>
       {[0, 72, 144, 216, 288].map((a) => (
-        <path key={a} d={PETAL} fill="var(--color-accent-pink)" transform={`rotate(${a})`} opacity="0.9" />
+        <path key={a} d={PETAL} fill="var(--color-accent-pink)" transform={`rotate(${a})`} opacity="0.88" />
       ))}
-      {[0, 40, 80, 120, 160, 200, 240, 280, 320].map((a) => (
+      {[0, 60, 120, 180, 240, 300].map((a) => (
         <g key={a} transform={`rotate(${a})`}>
-          <line x1="0" y1="0" x2="0" y2="-6" stroke="var(--color-accent-pink)" strokeWidth="0.5" opacity="0.7" />
-          <circle cx="0" cy="-6.5" r="0.8" fill="var(--color-accent-olive)" />
+          <line x1="0" y1="0" x2="0" y2="-5" stroke="var(--color-accent-pink)" strokeWidth="0.4" opacity="0.6" />
+          <circle cx="0" cy="-5.5" r="0.7" fill="var(--color-accent-olive)" opacity="0.9" />
         </g>
       ))}
-      <circle cx="0" cy="0" r="2.2" fill="var(--color-accent-pink)" opacity="0.8" />
+      <circle cx="0" cy="0" r="1.8" fill="var(--color-accent-pink)" opacity="0.7" />
     </g>
   );
 }
 
-// Cluster with an invisible hit circle — clicking anywhere within `hitRadius` triggers petals
-function BlossomCluster({ cx, cy, count = 6, spread = 14, baseScale = 1, baseOpacity = 0.52, hitRadius = 28, onHit }: {
-  cx: number; cy: number; count?: number; spread?: number;
-  baseScale?: number; baseOpacity?: number; hitRadius?: number;
-  onHit: (svgX: number, svgY: number) => void;
-}) {
-  const positions = Array.from({ length: count }, (_, i) => {
-    const angle = (i / count) * Math.PI * 2;
-    const d = i === 0 ? 0 : spread * (0.5 + ((i * 7) % 10) / 20);
-    return {
-      x: cx + Math.cos(angle) * d,
-      y: cy + Math.sin(angle) * d,
-      r: baseScale * (0.7 + (i % 3) * 0.15),
-      opacity: baseOpacity * (0.75 + (i % 4) * 0.08),
-      rotate: (i * 13) % 36,
-    };
-  });
+// Converts SVG viewBox coords → screen page coords
+function svgCoordsToScreen(svgX: number, svgY: number, svgEl: SVGSVGElement): { x: number; y: number } {
+  const rect = svgEl.getBoundingClientRect();
+  return {
+    x: rect.left + (svgX / 200) * rect.width,
+    y: rect.top  + (svgY / 1000) * rect.height,
+  };
+}
 
+function BlossomCloud({ cx, cy, onHit }: {
+  cx: number; cy: number;
+  onHit: (e: React.MouseEvent, svgX: number, svgY: number) => void;
+}) {
+  // Deterministic spread so it renders the same on server + client
+  const offsets = [
+    [0,0,1.0,0.48,0], [-12,-8,0.85,0.40,18], [10,-12,0.90,0.42,36],
+    [18,5,0.78,0.36,54], [-8,14,0.82,0.38,72], [6,-20,0.72,0.32,90],
+    [-18,4,0.88,0.44,108], [14,-6,0.80,0.38,126], [-4,18,0.76,0.34,144],
+    [20,-14,0.84,0.42,162], [-14,10,0.70,0.30,180], [8,22,0.78,0.36,198],
+  ];
   return (
     <g>
-      {positions.map((p, i) => (
-        <Blossom key={i} x={p.x} y={p.y} r={p.r} opacity={p.opacity} rotate={p.rotate} />
+      {offsets.map(([dx, dy, r, op, rot], i) => (
+        <Blossom key={i} x={cx+dx} y={cy+dy} r={r} opacity={op} rotate={rot} />
       ))}
-      {/* Invisible hit area */}
-      <circle
-        cx={cx} cy={cy} r={hitRadius}
-        fill="transparent"
-        className="blossom-hit"
-        onClick={() => onHit(cx, cy)}
-      />
+      {/* Large invisible hit circle */}
+      <circle cx={cx} cy={cy} r={32} fill="transparent" className="blossom-hit"
+        onClick={(e) => onHit(e, cx, cy)} />
     </g>
   );
 }
 
-function CherryBranchSvg({ onHit }: { onHit: (svgX: number, svgY: number, rect: DOMRect) => void }) {
+function CherryTree({ onHit }: {
+  onHit: (e: React.MouseEvent, svgX: number, svgY: number) => void;
+}) {
   return (
-    <svg
-      viewBox="0 0 200 1000"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className="h-full w-full"
-    >
-      {/* ── Branches ── */}
-      <path d="M110 1000 C105 880, 95 800, 100 700 C105 600, 90 520, 95 400 C100 300, 80 220, 70 120 C60 60, 50 30, 45 0"
-        stroke="var(--color-accent-olive)" strokeWidth="2.5" strokeLinecap="round" opacity="0.4" />
+    <svg viewBox="0 0 200 1000" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-full w-full">
 
-      {/* Top boughs */}
-      <path d="M68 100 C50 80, 20 55, 5 30"   stroke="var(--color-accent-olive)" strokeWidth="1.8" strokeLinecap="round" opacity="0.38" />
-      <path d="M65 130 C85 105, 115 85, 140 65" stroke="var(--color-accent-olive)" strokeWidth="1.6" strokeLinecap="round" opacity="0.35" />
-      <path d="M5 30 C-5 15, -8 5, -5 0"        stroke="var(--color-accent-olive)" strokeWidth="1.2" strokeLinecap="round" opacity="0.28" />
-      <path d="M22 48 C12 32, 8 20, 12 8"       stroke="var(--color-accent-olive)" strokeWidth="1.0" strokeLinecap="round" opacity="0.25" />
-      <path d="M140 65 C155 48, 165 35, 168 18"  stroke="var(--color-accent-olive)" strokeWidth="1.2" strokeLinecap="round" opacity="0.28" />
-      <path d="M130 75 C148 60, 160 52, 175 42"  stroke="var(--color-accent-olive)" strokeWidth="1.0" strokeLinecap="round" opacity="0.22" />
-      {/* Extra top twigs */}
-      <path d="M55 60 C45 40, 38 22, 42 5"      stroke="var(--color-accent-olive)" strokeWidth="1.0" strokeLinecap="round" opacity="0.22" />
-      <path d="M75 90 C90 68, 105 50, 108 28"    stroke="var(--color-accent-olive)" strokeWidth="0.9" strokeLinecap="round" opacity="0.20" />
+      {/* ── Trunk: grows from bottom-left, leans inward (right) toward content ── */}
+      <path d="M30 1000 C33 850, 36 720, 40 580 C44 440, 48 320, 52 200 C55 130, 58 70, 60 0"
+        stroke="var(--color-accent-olive)" strokeWidth="3" strokeLinecap="round" opacity="0.45" />
+
+      {/* ── Major boughs fanning up and inward (rightward) ── */}
+      {/* Bough 1: sweeps far right toward content area — the main canopy arm */}
+      <path d="M52 200 C80 170, 120 130, 170 80 C200 55, 230 30, 250 10"
+        stroke="var(--color-accent-olive)" strokeWidth="2" strokeLinecap="round" opacity="0.38" />
+      {/* Bough 2: mid-right */}
+      <path d="M55 160 C85 130, 130 100, 185 60 C210 42, 235 25, 255 8"
+        stroke="var(--color-accent-olive)" strokeWidth="1.6" strokeLinecap="round" opacity="0.34" />
+      {/* Bough 3: upper left — goes up and slightly left */}
+      <path d="M57 130 C45 95, 30 60, 15 20 C8 5, 2 -5, -5 -10"
+        stroke="var(--color-accent-olive)" strokeWidth="1.4" strokeLinecap="round" opacity="0.32" />
+      {/* Bough 4: straight up top */}
+      <path d="M58 100 C60 70, 62 40, 62 0"
+        stroke="var(--color-accent-olive)" strokeWidth="1.2" strokeLinecap="round" opacity="0.30" />
+
+      {/* Sub-boughs off bough 1 */}
+      <path d="M100 145 C115 115, 130 90, 150 65"
+        stroke="var(--color-accent-olive)" strokeWidth="1.0" strokeLinecap="round" opacity="0.26" />
+      <path d="M140 110 C158 85, 175 65, 195 48"
+        stroke="var(--color-accent-olive)" strokeWidth="0.9" strokeLinecap="round" opacity="0.24" />
+      <path d="M80 160 C95 130, 100 100, 105 75"
+        stroke="var(--color-accent-olive)" strokeWidth="0.9" strokeLinecap="round" opacity="0.22" />
+
+      {/* Mid trunk branches */}
+      <path d="M46 300 C28 275, 10 255, -5 235"
+        stroke="var(--color-accent-olive)" strokeWidth="1.2" strokeLinecap="round" opacity="0.28" />
+      <path d="M48 340 C70 315, 95 300, 120 285"
+        stroke="var(--color-accent-olive)" strokeWidth="1.1" strokeLinecap="round" opacity="0.26" />
+      <path d="M44 420 C22 400, 5 385, -10 370"
+        stroke="var(--color-accent-olive)" strokeWidth="1.0" strokeLinecap="round" opacity="0.24" />
+      <path d="M46 460 C68 440, 92 428, 115 415"
+        stroke="var(--color-accent-olive)" strokeWidth="0.9" strokeLinecap="round" opacity="0.22" />
+
+      {/* ── Dense blossom canopy — fills upper half completely ── */}
+
+      {/* Very top / trunk tip — tall column of blossoms */}
+      <BlossomCloud cx={60}  cy={-20} onHit={onHit} />
+      <BlossomCloud cx={62}  cy={20}  onHit={onHit} />
+      <BlossomCloud cx={58}  cy={60}  onHit={onHit} />
+
+      {/* Left bough cloud */}
+      <BlossomCloud cx={15}  cy={18}  onHit={onHit} />
+      <BlossomCloud cx={30}  cy={45}  onHit={onHit} />
+      <BlossomCloud cx={8}   cy={55}  onHit={onHit} />
+
+      {/* Right canopy — spreading wide over the content area */}
+      <BlossomCloud cx={110} cy={20}  onHit={onHit} />
+      <BlossomCloud cx={155} cy={15}  onHit={onHit} />
+      <BlossomCloud cx={195} cy={12}  onHit={onHit} />
+      <BlossomCloud cx={175} cy={45}  onHit={onHit} />
+      <BlossomCloud cx={140} cy={55}  onHit={onHit} />
+      <BlossomCloud cx={195} cy={55}  onHit={onHit} />
+      <BlossomCloud cx={85}  cy={35}  onHit={onHit} />
+      <BlossomCloud cx={120} cy={70}  onHit={onHit} />
+      <BlossomCloud cx={165} cy={80}  onHit={onHit} />
+      <BlossomCloud cx={100} cy={100} onHit={onHit} />
+      <BlossomCloud cx={155} cy={105} onHit={onHit} />
+      <BlossomCloud cx={78}  cy={120} onHit={onHit} />
+      <BlossomCloud cx={135} cy={130} onHit={onHit} />
+      <BlossomCloud cx={185} cy={120} onHit={onHit} />
+
+      {/* Fill in gaps across the full canopy width */}
+      <BlossomCloud cx={55}  cy={90}  onHit={onHit} />
+      <BlossomCloud cx={40}  cy={110} onHit={onHit} />
+      <BlossomCloud cx={20}  cy={90}  onHit={onHit} />
+      <BlossomCloud cx={10}  cy={125} onHit={onHit} />
 
       {/* Mid branches */}
-      <path d="M80 220 C55 205, 25 195, 5 180"   stroke="var(--color-accent-olive)" strokeWidth="1.4" strokeLinecap="round" opacity="0.30" />
-      <path d="M88 260 C110 240, 135 228, 155 215" stroke="var(--color-accent-olive)" strokeWidth="1.2" strokeLinecap="round" opacity="0.28" />
-      <path d="M5 180 C-5 165, -8 155, -5 145"   stroke="var(--color-accent-olive)" strokeWidth="0.9" strokeLinecap="round" opacity="0.22" />
-
-      {/* Lower branches */}
-      <path d="M93 400 C68 385, 40 375, 18 362"  stroke="var(--color-accent-olive)" strokeWidth="1.2" strokeLinecap="round" opacity="0.26" />
-      <path d="M97 440 C118 422, 142 410, 160 398" stroke="var(--color-accent-olive)" strokeWidth="1.0" strokeLinecap="round" opacity="0.24" />
-
-      {/* ── Flower clusters ── */}
-      {/* Very top — the crown, packed tight */}
-      <BlossomCluster cx={-5}  cy={0}   count={9} spread={16} baseScale={1.15} baseOpacity={0.60} hitRadius={30} onHit={(x,y) => onHit(x, y, (document.querySelector(".leaf-decor-left svg") as SVGSVGElement)?.getBoundingClientRect()!)} />
-      <BlossomCluster cx={12}  cy={8}   count={7} spread={14} baseScale={1.05} baseOpacity={0.55} hitRadius={28} onHit={(x,y) => onHit(x, y, (document.querySelector(".leaf-decor-left svg") as SVGSVGElement)?.getBoundingClientRect()!)} />
-      <BlossomCluster cx={42}  cy={5}   count={7} spread={13} baseScale={1.0}  baseOpacity={0.52} hitRadius={26} onHit={(x,y) => onHit(x, y, (document.querySelector(".leaf-decor-left svg") as SVGSVGElement)?.getBoundingClientRect()!)} />
-      <BlossomCluster cx={108} cy={26}  count={7} spread={14} baseScale={1.0}  baseOpacity={0.52} hitRadius={26} onHit={(x,y) => onHit(x, y, (document.querySelector(".leaf-decor-left svg") as SVGSVGElement)?.getBoundingClientRect()!)} />
-      <BlossomCluster cx={168} cy={16}  count={8} spread={16} baseScale={1.1}  baseOpacity={0.58} hitRadius={30} onHit={(x,y) => onHit(x, y, (document.querySelector(".leaf-decor-left svg") as SVGSVGElement)?.getBoundingClientRect()!)} />
-      <BlossomCluster cx={155} cy={38}  count={6} spread={13} baseScale={0.95} baseOpacity={0.50} hitRadius={26} onHit={(x,y) => onHit(x, y, (document.querySelector(".leaf-decor-left svg") as SVGSVGElement)?.getBoundingClientRect()!)} />
-      <BlossomCluster cx={175} cy={42}  count={5} spread={11} baseScale={0.85} baseOpacity={0.44} hitRadius={24} onHit={(x,y) => onHit(x, y, (document.querySelector(".leaf-decor-left svg") as SVGSVGElement)?.getBoundingClientRect()!)} />
-      <BlossomCluster cx={5}   cy={28}  count={7} spread={15} baseScale={1.0}  baseOpacity={0.54} hitRadius={28} onHit={(x,y) => onHit(x, y, (document.querySelector(".leaf-decor-left svg") as SVGSVGElement)?.getBoundingClientRect()!)} />
-      <BlossomCluster cx={22}  cy={45}  count={6} spread={13} baseScale={0.92} baseOpacity={0.48} hitRadius={26} onHit={(x,y) => onHit(x, y, (document.querySelector(".leaf-decor-left svg") as SVGSVGElement)?.getBoundingClientRect()!)} />
-      <BlossomCluster cx={140} cy={62}  count={6} spread={13} baseScale={0.95} baseOpacity={0.50} hitRadius={26} onHit={(x,y) => onHit(x, y, (document.querySelector(".leaf-decor-left svg") as SVGSVGElement)?.getBoundingClientRect()!)} />
-
-      {/* Mid-upper */}
-      <BlossomCluster cx={5}   cy={145} count={6} spread={14} baseScale={0.9}  baseOpacity={0.44} hitRadius={26} onHit={(x,y) => onHit(x, y, (document.querySelector(".leaf-decor-left svg") as SVGSVGElement)?.getBoundingClientRect()!)} />
-      <BlossomCluster cx={155} cy={212} count={5} spread={13} baseScale={0.85} baseOpacity={0.40} hitRadius={24} onHit={(x,y) => onHit(x, y, (document.querySelector(".leaf-decor-left svg") as SVGSVGElement)?.getBoundingClientRect()!)} />
-      <BlossomCluster cx={85}  cy={220} count={4} spread={10} baseScale={0.75} baseOpacity={0.36} hitRadius={22} onHit={(x,y) => onHit(x, y, (document.querySelector(".leaf-decor-left svg") as SVGSVGElement)?.getBoundingClientRect()!)} />
-
-      {/* Mid */}
-      <BlossomCluster cx={18}  cy={360} count={5} spread={13} baseScale={0.85} baseOpacity={0.38} hitRadius={24} onHit={(x,y) => onHit(x, y, (document.querySelector(".leaf-decor-left svg") as SVGSVGElement)?.getBoundingClientRect()!)} />
-      <BlossomCluster cx={160} cy={396} count={5} spread={12} baseScale={0.80} baseOpacity={0.36} hitRadius={24} onHit={(x,y) => onHit(x, y, (document.querySelector(".leaf-decor-left svg") as SVGSVGElement)?.getBoundingClientRect()!)} />
+      <BlossomCloud cx={-5}  cy={235} onHit={onHit} />
+      <BlossomCloud cx={120} cy={285} onHit={onHit} />
+      <BlossomCloud cx={-10} cy={370} onHit={onHit} />
+      <BlossomCloud cx={115} cy={415} onHit={onHit} />
     </svg>
   );
 }
@@ -130,23 +156,21 @@ function CherryBranchSvg({ onHit }: { onHit: (svgX: number, svgY: number, rect: 
 export function LeafDecor() {
   const [petals, setPetals] = useState<FallingPetal[]>([]);
 
-  // svgX/svgY are in SVG viewBox coords; rect is the SVG's bounding box in page space
-  const spawnAtSvgCoords = useCallback((svgX: number, svgY: number, rect: DOMRect) => {
-    const scaleX = rect.width / 200;
-    const scaleY = rect.height / 1000;
-    const pageX = rect.left + svgX * scaleX;
-    const pageY = rect.top + svgY * scaleY;
+  const spawnFromSvgPos = useCallback((e: React.MouseEvent, svgX: number, svgY: number) => {
+    const svg = (e.target as Element).closest("svg") as SVGSVGElement | null;
+    if (!svg) return;
+    const { x: pageX, y: pageY } = svgCoordsToScreen(svgX, svgY, svg);
 
-    const count = 3 + Math.floor(Math.random() * 4); // reduced volume
+    const count = 3 + Math.floor(Math.random() * 4);
     const newPetals: FallingPetal[] = Array.from({ length: count }, () => ({
       id: nextId++,
-      x: pageX + (Math.random() - 0.5) * 18,
-      y: pageY,
-      drift: `${(Math.random() - 0.5) * 100}px`,
-      spin: `${(Math.random() > 0.5 ? 1 : -1) * (180 + Math.random() * 300)}deg`,
+      x: pageX + (Math.random() - 0.5) * 20,
+      y: pageY + (Math.random() - 0.5) * 10,
+      drift: `${(Math.random() - 0.5) * 90}px`,
+      spin: `${(Math.random() > 0.5 ? 1 : -1) * (180 + Math.random() * 280)}deg`,
       duration: `${2 + Math.random() * 1.5}s`,
       delay: `${Math.random() * 0.3}s`,
-      scale: 0.5 + Math.random() * 0.6,
+      scale: 0.5 + Math.random() * 0.55,
     }));
 
     setPetals((prev) => [...prev, ...newPetals]);
@@ -156,31 +180,19 @@ export function LeafDecor() {
     });
   }, []);
 
-  // Each branch needs to resolve the correct SVG element's rect at click time
-  const makeHitHandler = useCallback((selector: string) => {
-    return (svgX: number, svgY: number, _rect: DOMRect) => {
-      const el = document.querySelector(selector) as SVGSVGElement | null;
-      if (!el) return;
-      spawnAtSvgCoords(svgX, svgY, el.getBoundingClientRect());
-    };
-  }, [spawnAtSvgCoords]);
-
   return (
     <>
       <div className="leaf-decor leaf-decor-left" aria-hidden>
-        <BranchWithHandlers side="left" spawnAtSvgCoords={spawnAtSvgCoords} />
+        <CherryTree onHit={spawnFromSvgPos} />
       </div>
       <div className="leaf-decor leaf-decor-right" aria-hidden>
         <div className="h-full w-full" style={{ transform: "scaleX(-1)" }}>
-          <BranchWithHandlers side="right" spawnAtSvgCoords={spawnAtSvgCoords} />
+          <CherryTree onHit={spawnFromSvgPos} />
         </div>
       </div>
 
       {petals.map((p) => (
-        <svg
-          key={p.id}
-          width="20" height="20"
-          viewBox="-11 -11 22 22"
+        <svg key={p.id} width="20" height="20" viewBox="-11 -11 22 22"
           style={{
             position: "fixed",
             left: p.x,
@@ -194,103 +206,10 @@ export function LeafDecor() {
             scale: String(p.scale),
           }}
         >
-          <path d={PETAL} fill="var(--color-accent-pink)" opacity="0.85" />
-          <circle cx="0" cy="0" r="1.5" fill="var(--color-accent-pink)" opacity="0.6" />
+          <path d={PETAL} fill="var(--color-accent-pink)" opacity="0.80" />
+          <circle cx="0" cy="0" r="1.4" fill="var(--color-accent-pink)" opacity="0.55" />
         </svg>
       ))}
     </>
-  );
-}
-
-// Separate component so we can ref the SVG element directly
-function BranchWithHandlers({ side, spawnAtSvgCoords }: {
-  side: "left" | "right";
-  spawnAtSvgCoords: (x: number, y: number, rect: DOMRect) => void;
-}) {
-  const handleHit = useCallback((svgX: number, svgY: number, e: React.MouseEvent) => {
-    const svg = (e.target as Element).closest("svg") as SVGSVGElement | null;
-    if (!svg) return;
-    const rect = svg.getBoundingClientRect();
-    // For mirrored right side, flip X back
-    const actualX = side === "right" ? 200 - svgX : svgX;
-    spawnAtSvgCoords(actualX, svgY, rect);
-  }, [side, spawnAtSvgCoords]);
-
-  return (
-    <svg
-      viewBox="0 0 200 1000"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className="h-full w-full"
-    >
-      {/* ── Branches ── */}
-      <path d="M110 1000 C105 880, 95 800, 100 700 C105 600, 90 520, 95 400 C100 300, 80 220, 70 120 C60 60, 50 30, 45 0"
-        stroke="var(--color-accent-olive)" strokeWidth="2.5" strokeLinecap="round" opacity="0.4" />
-      <path d="M68 100 C50 80, 20 55, 5 30"    stroke="var(--color-accent-olive)" strokeWidth="1.8" strokeLinecap="round" opacity="0.38" />
-      <path d="M65 130 C85 105, 115 85, 140 65" stroke="var(--color-accent-olive)" strokeWidth="1.6" strokeLinecap="round" opacity="0.35" />
-      <path d="M5 30 C-5 15, -8 5, -5 0"        stroke="var(--color-accent-olive)" strokeWidth="1.2" strokeLinecap="round" opacity="0.28" />
-      <path d="M22 48 C12 32, 8 20, 12 8"       stroke="var(--color-accent-olive)" strokeWidth="1.0" strokeLinecap="round" opacity="0.25" />
-      <path d="M140 65 C155 48, 165 35, 168 18"  stroke="var(--color-accent-olive)" strokeWidth="1.2" strokeLinecap="round" opacity="0.28" />
-      <path d="M130 75 C148 60, 160 52, 175 42"  stroke="var(--color-accent-olive)" strokeWidth="1.0" strokeLinecap="round" opacity="0.22" />
-      <path d="M55 60 C45 40, 38 22, 42 5"       stroke="var(--color-accent-olive)" strokeWidth="1.0" strokeLinecap="round" opacity="0.22" />
-      <path d="M75 90 C90 68, 105 50, 108 28"    stroke="var(--color-accent-olive)" strokeWidth="0.9" strokeLinecap="round" opacity="0.20" />
-      <path d="M80 220 C55 205, 25 195, 5 180"   stroke="var(--color-accent-olive)" strokeWidth="1.4" strokeLinecap="round" opacity="0.30" />
-      <path d="M88 260 C110 240, 135 228, 155 215" stroke="var(--color-accent-olive)" strokeWidth="1.2" strokeLinecap="round" opacity="0.28" />
-      <path d="M5 180 C-5 165, -8 155, -5 145"   stroke="var(--color-accent-olive)" strokeWidth="0.9" strokeLinecap="round" opacity="0.22" />
-      <path d="M93 400 C68 385, 40 375, 18 362"  stroke="var(--color-accent-olive)" strokeWidth="1.2" strokeLinecap="round" opacity="0.26" />
-      <path d="M97 440 C118 422, 142 410, 160 398" stroke="var(--color-accent-olive)" strokeWidth="1.0" strokeLinecap="round" opacity="0.24" />
-
-      {/* ── Flower clusters with hit areas ── */}
-      {/* Crown — packed top */}
-      <ClusterWithHit cx={-5}  cy={0}   count={9} spread={16} baseScale={1.15} baseOpacity={0.60} hitRadius={30} onHit={(x,y,e) => handleHit(x,y,e)} />
-      <ClusterWithHit cx={12}  cy={8}   count={7} spread={14} baseScale={1.05} baseOpacity={0.55} hitRadius={28} onHit={(x,y,e) => handleHit(x,y,e)} />
-      <ClusterWithHit cx={42}  cy={5}   count={7} spread={13} baseScale={1.0}  baseOpacity={0.52} hitRadius={26} onHit={(x,y,e) => handleHit(x,y,e)} />
-      <ClusterWithHit cx={108} cy={26}  count={7} spread={14} baseScale={1.0}  baseOpacity={0.52} hitRadius={26} onHit={(x,y,e) => handleHit(x,y,e)} />
-      <ClusterWithHit cx={168} cy={16}  count={8} spread={16} baseScale={1.1}  baseOpacity={0.58} hitRadius={30} onHit={(x,y,e) => handleHit(x,y,e)} />
-      <ClusterWithHit cx={155} cy={38}  count={6} spread={13} baseScale={0.95} baseOpacity={0.50} hitRadius={26} onHit={(x,y,e) => handleHit(x,y,e)} />
-      <ClusterWithHit cx={175} cy={42}  count={5} spread={11} baseScale={0.85} baseOpacity={0.44} hitRadius={24} onHit={(x,y,e) => handleHit(x,y,e)} />
-      <ClusterWithHit cx={5}   cy={28}  count={7} spread={15} baseScale={1.0}  baseOpacity={0.54} hitRadius={28} onHit={(x,y,e) => handleHit(x,y,e)} />
-      <ClusterWithHit cx={22}  cy={45}  count={6} spread={13} baseScale={0.92} baseOpacity={0.48} hitRadius={26} onHit={(x,y,e) => handleHit(x,y,e)} />
-      <ClusterWithHit cx={140} cy={62}  count={6} spread={13} baseScale={0.95} baseOpacity={0.50} hitRadius={26} onHit={(x,y,e) => handleHit(x,y,e)} />
-      {/* Mid-upper */}
-      <ClusterWithHit cx={5}   cy={145} count={6} spread={14} baseScale={0.9}  baseOpacity={0.44} hitRadius={26} onHit={(x,y,e) => handleHit(x,y,e)} />
-      <ClusterWithHit cx={155} cy={212} count={5} spread={13} baseScale={0.85} baseOpacity={0.40} hitRadius={24} onHit={(x,y,e) => handleHit(x,y,e)} />
-      <ClusterWithHit cx={85}  cy={220} count={4} spread={10} baseScale={0.75} baseOpacity={0.36} hitRadius={22} onHit={(x,y,e) => handleHit(x,y,e)} />
-      {/* Mid */}
-      <ClusterWithHit cx={18}  cy={360} count={5} spread={13} baseScale={0.85} baseOpacity={0.38} hitRadius={24} onHit={(x,y,e) => handleHit(x,y,e)} />
-      <ClusterWithHit cx={160} cy={396} count={5} spread={12} baseScale={0.80} baseOpacity={0.36} hitRadius={24} onHit={(x,y,e) => handleHit(x,y,e)} />
-    </svg>
-  );
-}
-
-function ClusterWithHit({ cx, cy, count, spread, baseScale, baseOpacity, hitRadius, onHit }: {
-  cx: number; cy: number; count: number; spread: number;
-  baseScale: number; baseOpacity: number; hitRadius: number;
-  onHit: (svgX: number, svgY: number, e: React.MouseEvent) => void;
-}) {
-  const positions = Array.from({ length: count }, (_, i) => {
-    const angle = (i / count) * Math.PI * 2;
-    const d = i === 0 ? 0 : spread * (0.5 + ((i * 7) % 10) / 20);
-    return {
-      x: cx + Math.cos(angle) * d,
-      y: cy + Math.sin(angle) * d,
-      r: baseScale * (0.7 + (i % 3) * 0.15),
-      opacity: baseOpacity * (0.75 + (i % 4) * 0.08),
-      rotate: (i * 13) % 36,
-    };
-  });
-
-  return (
-    <g>
-      {positions.map((p, i) => (
-        <Blossom key={i} x={p.x} y={p.y} r={p.r} opacity={p.opacity} rotate={p.rotate} />
-      ))}
-      <circle
-        cx={cx} cy={cy} r={hitRadius}
-        fill="transparent"
-        className="blossom-hit"
-        onClick={(e) => onHit(cx, cy, e)}
-      />
-    </g>
   );
 }
