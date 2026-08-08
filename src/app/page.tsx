@@ -1,14 +1,11 @@
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { PostListItem } from "@/components/blog/post-list-item";
-import { Tag } from "@/components/ui/tag";
-import { getAllPosts, getFeaturedProjects, getHomePage } from "@/lib/content";
+import { getAllPosts, getHomePage } from "@/lib/content";
 import { siteConfig } from "@/lib/config";
 
 export default function HomePage() {
   const posts = getAllPosts().slice(0, 4);
-  const featured = getFeaturedProjects().slice(0, 3);
   const home = getHomePage();
 
   return (
@@ -33,87 +30,42 @@ export default function HomePage() {
               About me
             </Link>
             <Link
-              href="/projects"
+              href="/blog"
               className="inline-flex items-center gap-1 rounded-md border border-border px-4 py-2.5 text-sm font-medium text-ink transition-colors hover:border-accent hover:text-accent"
             >
-              View projects
-              <ArrowUpRight size={14} />
+              Read the blog
             </Link>
           </div>
         </section>
       </Container>
 
       {/* Recent writing */}
-      <Container className="border-t border-border">
-        <section className="py-16">
-          <div className="mb-6 flex items-baseline justify-between">
-            <h2 className="font-display text-xl font-semibold text-ink">
-              Recent writing
-            </h2>
-            <Link
-              href="/blog"
-              className="text-sm text-ink-muted hover:text-accent"
-            >
-              All posts →
-            </Link>
-          </div>
-          <div>
-            {posts.length > 0 ? (
-              posts.map((post) => <PostListItem key={post.slug} post={post} />)
-            ) : (
-              <p className="border-b border-border py-7 text-ink-faint">
-                [No posts yet — add an .mdx file to content/blog to get
-                started.]
-              </p>
-            )}
-          </div>
-        </section>
-      </Container>
-
-      {/* Featured projects */}
-      <Container className="border-t border-border">
-        <section className="py-16">
-          <div className="mb-6 flex items-baseline justify-between">
-            <h2 className="font-display text-xl font-semibold text-ink">
-              Featured projects
-            </h2>
-            <Link
-              href="/projects"
-              className="text-sm text-ink-muted hover:text-accent"
-            >
-              All projects →
-            </Link>
-          </div>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {featured.length > 0 ? (
-              featured.map((project) => (
-                <Link
-                  key={project.slug}
-                  href={`/projects/${project.slug}`}
-                  className="group rounded-md border border-border p-5 transition-colors hover:border-accent"
-                >
-                  <h3 className="font-display text-lg font-medium text-ink group-hover:text-accent">
-                    {project.frontmatter.title}
-                  </h3>
-                  <p className="mt-2 text-sm text-ink-muted">
-                    {project.frontmatter.summary}
-                  </p>
-                  <div className="mt-4 flex flex-wrap gap-1.5">
-                    {project.frontmatter.stack?.slice(0, 3).map((tech) => (
-                      <Tag key={tech}>{tech}</Tag>
-                    ))}
-                  </div>
-                </Link>
-              ))
-            ) : (
-              <p className="text-ink-faint">
-                [No featured projects yet — set `featured: true` in a
-                project&apos;s frontmatter.]
-              </p>
-            )}
-          </div>
-        </section>
-      </Container>
+      <div className="bg-bg-tint">
+        <Container>
+          <section className="py-16">
+            <div className="mb-8 flex items-baseline justify-between">
+              <h2 className="font-display text-2xl font-semibold text-ink">
+                Recent writing
+              </h2>
+              <Link
+                href="/blog"
+                className="text-sm text-ink-muted hover:text-accent"
+              >
+                All posts →
+              </Link>
+            </div>
+            <div>
+              {posts.length > 0 ? (
+                posts.map((post) => <PostListItem key={post.slug} post={post} />)
+              ) : (
+                <p className="border-b border-border py-7 text-ink-faint">
+                  No posts yet — check back soon.
+                </p>
+              )}
+            </div>
+          </section>
+        </Container>
+      </div>
     </>
   );
 }

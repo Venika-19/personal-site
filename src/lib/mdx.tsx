@@ -8,6 +8,7 @@ import rehypeKatex from "rehype-katex";
 import { CodeBlock } from "@/components/blog/code-block";
 import { Mermaid } from "@/components/blog/mermaid";
 import { Callout } from "@/components/blog/callout";
+import { Era } from "@/components/about/era-card";
 import { remarkWikilinks } from "@/lib/backlinks";
 
 const prettyCodeOptions = {
@@ -18,14 +19,11 @@ const prettyCodeOptions = {
   keepBackground: false,
 };
 
-/**
- * Shared MDX component map. Anything exposed here can be used
- * directly inside an .mdx content file without an import.
- */
 const mdxComponents = {
   pre: CodeBlock,
   Mermaid,
   Callout,
+  Era,
 };
 
 export function MDXContent({

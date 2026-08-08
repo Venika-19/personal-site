@@ -1,16 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  --color-bg: #fafaf8;
-  --color-bg-raised: #ffffff;
-  --color-ink: #14140f;
-  --color-ink-muted: #5c5b54;
-  --color-ink-faint: #8c8a80;
-  --color-border: #e6e4dc;
-  --color-border-strong: #d4d2c8;
-  --color-accent: #b8501f;
-  --color-accent-soft: #f3e3d6;
-  --color-code-bg: #f1efe7;
+  --color-bg: #faf5f2;
+  --color-bg-raised: #fefcfa;
+  --color-bg-tint: #f5ede8;
+  --color-ink: #1c1a17;
+  --color-ink-muted: #5a5248;
+  --color-ink-faint: #9a8f84;
+  --color-border: #ecddd6;
+  --color-border-strong: #d9c4b8;
+  --color-accent: #8b7355;
+  --color-accent-soft: #f0e8df;
+  --color-accent-pink: #e8a598;
+  --color-accent-olive: #7a8c5a;
+  --color-code-bg: #f2ede8;
 
   --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
   --font-body: var(--font-source-serif), ui-serif, Georgia, serif;
@@ -24,16 +27,19 @@
 }
 
 .dark {
-  --color-bg: #0c0c0a;
-  --color-bg-raised: #131210;
-  --color-ink: #f3f1e9;
-  --color-ink-muted: #b3b09f;
-  --color-ink-faint: #6f6c61;
-  --color-border: #262420;
-  --color-border-strong: #38352e;
-  --color-accent: #e08a4f;
-  --color-accent-soft: #2a2017;
-  --color-code-bg: #161513;
+  --color-bg: #0e0d0b;
+  --color-bg-raised: #161410;
+  --color-bg-tint: #1e1c16;
+  --color-ink: #f0ece5;
+  --color-ink-muted: #b0a898;
+  --color-ink-faint: #6b6358;
+  --color-border: #2a2720;
+  --color-border-strong: #3d3830;
+  --color-accent: #c4a882;
+  --color-accent-soft: #2a2318;
+  --color-accent-pink: #c9897c;
+  --color-accent-olive: #9aad72;
+  --color-code-bg: #141210;
 
   color-scheme: dark;
 }
@@ -41,6 +47,7 @@
 @theme inline {
   --color-bg: var(--color-bg);
   --color-bg-raised: var(--color-bg-raised);
+  --color-bg-tint: var(--color-bg-tint);
   --color-ink: var(--color-ink);
   --color-ink-muted: var(--color-ink-muted);
   --color-ink-faint: var(--color-ink-faint);
@@ -48,6 +55,8 @@
   --color-border-strong: var(--color-border-strong);
   --color-accent: var(--color-accent);
   --color-accent-soft: var(--color-accent-soft);
+  --color-accent-pink: var(--color-accent-pink);
+  --color-accent-olive: var(--color-accent-olive);
   --color-code-bg: var(--color-code-bg);
   --font-display: var(--font-display);
   --font-body: var(--font-body);
@@ -86,6 +95,19 @@ body {
 ::selection {
   background: var(--color-accent-soft);
   color: var(--color-ink);
+}
+
+/* Faint decorative background blobs */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 60% 40% at 15% 20%, color-mix(in srgb, var(--color-accent-pink) 12%, transparent) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 35% at 85% 70%, color-mix(in srgb, var(--color-accent-olive) 8%, transparent) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 30% at 60% 10%, color-mix(in srgb, var(--color-accent-pink) 6%, transparent) 0%, transparent 70%);
 }
 
 :focus-visible {
