@@ -97,6 +97,12 @@ body {
   color: var(--color-ink);
 }
 
+@keyframes petal-fall {
+  0%   { transform: translate(0, 0) rotate(0deg); opacity: 0.8; }
+  70%  { opacity: 0.5; }
+  100% { transform: translate(var(--petal-drift), 550px) rotate(var(--petal-spin)); opacity: 0; }
+}
+
 /* Background colour blobs */
 body::before {
   content: "";
