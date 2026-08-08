@@ -97,12 +97,6 @@ body {
   color: var(--color-ink);
 }
 
-@keyframes petal-fall {
-  0%   { transform: translate(0, 0) rotate(0deg); opacity: 0.8; }
-  70%  { opacity: 0.5; }
-  100% { transform: translate(var(--petal-drift), 550px) rotate(var(--petal-spin)); opacity: 0; }
-}
-
 /* Background colour blobs */
 body::before {
   content: "";
@@ -117,30 +111,6 @@ body::before {
     radial-gradient(ellipse 50% 40% at 20% 90%, color-mix(in srgb, var(--color-accent-olive) 10%, transparent) 0%, transparent 65%);
 }
 
-/* Leaf decorations — fixed to viewport sides */
-.leaf-decor {
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  width: 200px;
-  pointer-events: none;
-  z-index: 40;
-  overflow: hidden;
-}
-/* Branch SVG blocks pointer events; only blossom hit areas re-enable them */
-.leaf-decor svg {
-  pointer-events: none;
-}
-.blossom-hit {
-  pointer-events: all;
-  cursor: pointer;
-}
-.leaf-decor-left  { left: 0; }
-.leaf-decor-right { right: 0; }
-
-@media (max-width: 1280px) {
-  .leaf-decor { display: none; }
-}
 
 :focus-visible {
   outline: 2px solid var(--color-accent);
