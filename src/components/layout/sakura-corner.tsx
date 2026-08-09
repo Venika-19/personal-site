@@ -35,29 +35,6 @@ const FLOWERS_RIGHT: FlowerDef[] = [
   { x: 196, y: 170, r: 0.60, rot:  32 },
   { x: 172, y: 178, r: 0.58, rot: -52 },
   { x: 218, y: 164, r: 0.62, rot:   8 },
-  // dense fill along main arm
-  { x: 432, y: 144, r: 0.67, rot: -12 },
-  { x: 406, y: 128, r: 0.65, rot:  36 },
-  { x: 382, y: 114, r: 0.63, rot: -48 },
-  { x: 358, y: 104, r: 0.65, rot:  20 },
-  { x: 334, y: 118, r: 0.62, rot: -30 },
-  { x: 302, y: 130, r: 0.60, rot:  44 },
-  { x: 268, y: 140, r: 0.61, rot: -16 },
-  { x: 248, y: 130, r: 0.59, rot:  58 },
-  // upper fork dense
-  { x: 348, y:  70, r: 0.66, rot: -36 },
-  { x: 360, y:  52, r: 0.62, rot:  28 },
-  { x: 372, y:  36, r: 0.58, rot: -55 },
-  { x: 382, y:  60, r: 0.60, rot:  15 },
-  // low fork dense
-  { x: 230, y: 154, r: 0.62, rot: -42 },
-  { x: 214, y: 162, r: 0.60, rot:  26 },
-  { x: 200, y: 158, r: 0.58, rot: -18 },
-  // near entry
-  { x: 510, y: 184, r: 0.64, rot:  38 },
-  { x: 536, y: 202, r: 0.60, rot: -28 },
-  { x: 488, y: 168, r: 0.62, rot:  14 },
-  { x: 554, y: 216, r: 0.57, rot: -50 },
 ];
 
 // Left branch is a horizontal mirror of right: x → 600 - x, rot → -rot
