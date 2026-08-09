@@ -97,27 +97,26 @@ body {
   color: var(--color-ink);
 }
 
-@keyframes petal-fall {
-  0%   { transform: translate(0,0) rotate(0deg); opacity: 0.75; }
-  70%  { opacity: 0.4; }
-  100% { transform: translate(var(--petal-drift), 480px) rotate(var(--petal-spin)); opacity: 0; }
-}
-
-.sakura-corner {
+.sakura-branch-wrap {
   position: fixed;
-  top: 0;
-  bottom: 0;
+  right: 0;
+  top: 30%;
+  width: min(520px, 48vw);
+  height: auto;
   pointer-events: none;
   z-index: 40;
-  width: 280px;
+  transform: translateY(-50%);
 }
-.sakura-corner-left  { left: 0; }
-.sakura-corner-right { right: 0; transform: scaleX(-1); }
-.sakura-corner svg   { pointer-events: none; }
-.sakura-hit          { pointer-events: all; cursor: pointer; }
 
-@media (max-width: 1100px) {
-  .sakura-corner { display: none; }
+.sakura-branch-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  pointer-events: all;
+}
+
+@media (max-width: 900px) {
+  .sakura-branch-wrap { display: none; }
 }
 
 /* Background colour blobs */

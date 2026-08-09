@@ -1,336 +1,318 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-interface FallingPetal {
-  id: number; x: number; y: number;
-  drift: string; spin: string;
-  duration: string; delay: string; scale: number;
-}
-
-let nextId = 0;
-
-// 6-petal blossom
-function Blossom({ x, y, s = 1, op = 0.55, rot = 0 }: {
-  x: number; y: number; s?: number; op?: number; rot?: number;
-}) {
-  return (
-    <g transform={`translate(${x},${y}) rotate(${rot}) scale(${s})`} opacity={op}>
-      {[0, 60, 120, 180, 240, 300].map((a) => (
-        <ellipse key={a} cx={0} cy={-7} rx={3.4} ry={6.0}
-          fill="#f2a8bc" transform={`rotate(${a})`} opacity="0.88" />
-      ))}
-      {[0, 60, 120, 180, 240, 300].map((a) => (
-        <g key={a}>
-          <line
-            x1="0" y1="0"
-            x2={+(Math.sin(a * Math.PI / 180) * 5).toFixed(2)}
-            y2={-(Math.cos(a * Math.PI / 180) * 5).toFixed(2)}
-            stroke="#e8a0b0" strokeWidth="0.5" opacity="0.55"
-          />
-          <circle
-            cx={+(Math.sin(a * Math.PI / 180) * 5.6).toFixed(2)}
-            cy={-(Math.cos(a * Math.PI / 180) * 5.6).toFixed(2)}
-            r="0.85" fill="#7a6248" opacity="0.72"
-          />
-        </g>
-      ))}
-      <circle cx="0" cy="0" r="2" fill="#fbd8e4" opacity="0.90" />
-    </g>
-  );
-}
-
-// Cluster shapes: each entry is [dx, dy, scale_ratio, rotation]
-const CLUSTER_TIGHT = [
-  [0, 0, 1.0, 0], [8, -7, 0.86, 18], [-9, -5, 0.88, -22],
-  [11, 5, 0.78, 38], [-6, 9, 0.82, -30],
-];
-const CLUSTER_SPREAD = [
-  [0, 0, 0.94, 0], [18, -12, 0.72, 25], [-16, -10, 0.76, -20],
-  [20, 8, 0.68, 45], [-10, 16, 0.74, -40], [12, -20, 0.66, 60],
-];
-const CLUSTER_LOOSE = [
-  [0, 0, 0.88, 0], [14, -10, 0.74, 30], [-12, -8, 0.76, -25],
-];
-const CLUSTER_SINGLE = [
-  [0, 0, 0.80, 0], [7, -5, 0.68, 20],
+// Flower positions in the SVG viewBox (600×400).
+// These are the ONLY valid emission origins for falling particles.
+const FLOWERS: { x: number; y: number; r: number; rot: number }[] = [
+  { x: 312, y: 148, r: 1.0,  rot: 12  },
+  { x: 348, y: 118, r: 0.85, rot: -8  },
+  { x: 274, y: 132, r: 0.90, rot: 25  },
+  { x: 388, y: 96,  r: 0.78, rot: 40  },
+  { x: 240, y: 108, r: 0.82, rot: -18 },
+  { x: 418, y: 134, r: 0.72, rot: 55  },
+  { x: 352, y: 168, r: 0.76, rot: -35 },
+  { x: 210, y: 148, r: 0.68, rot: 10  },
+  { x: 455, y: 112, r: 0.65, rot: -22 },
+  { x: 290, y: 172, r: 0.70, rot: 48  },
 ];
 
-// Left tree nodes — dense crown, tapering down
-const NODES_LEFT: { cx: number; cy: number; s: number; op: number; cluster: number[][] }[] = [
-  // Crown — tight clusters
-  { cx: 200, cy: 22,  s: 1.05, op: 0.58, cluster: CLUSTER_TIGHT },
-  { cx: 248, cy: 10,  s: 0.92, op: 0.52, cluster: CLUSTER_TIGHT },
-  { cx: 162, cy: 16,  s: 0.96, op: 0.54, cluster: CLUSTER_TIGHT },
-  { cx: 272, cy: 38,  s: 0.84, op: 0.46, cluster: CLUSTER_LOOSE },
-  { cx: 224, cy: 52,  s: 0.90, op: 0.50, cluster: CLUSTER_TIGHT },
-  { cx: 132, cy: 44,  s: 0.86, op: 0.48, cluster: CLUSTER_LOOSE },
-  // Upper mid — spread
-  { cx: 184, cy: 74,  s: 0.88, op: 0.50, cluster: CLUSTER_SPREAD },
-  { cx: 256, cy: 76,  s: 0.80, op: 0.44, cluster: CLUSTER_LOOSE },
-  { cx: 104, cy: 72,  s: 0.82, op: 0.46, cluster: CLUSTER_SPREAD },
-  { cx: 154, cy: 94,  s: 0.86, op: 0.48, cluster: CLUSTER_TIGHT },
-  { cx: 72,  cy: 98,  s: 0.80, op: 0.44, cluster: CLUSTER_LOOSE },
-  { cx: 218, cy: 100, s: 0.78, op: 0.42, cluster: CLUSTER_LOOSE },
-  // Mid — sparse spread
-  { cx: 126, cy: 124, s: 0.82, op: 0.46, cluster: CLUSTER_SPREAD },
-  { cx: 182, cy: 132, s: 0.76, op: 0.40, cluster: CLUSTER_LOOSE },
-  { cx: 48,  cy: 140, s: 0.78, op: 0.42, cluster: CLUSTER_SPREAD },
-  { cx: 96,  cy: 158, s: 0.80, op: 0.44, cluster: CLUSTER_LOOSE },
-  { cx: 152, cy: 166, s: 0.72, op: 0.38, cluster: CLUSTER_SINGLE },
-  { cx: 24,  cy: 178, s: 0.70, op: 0.38, cluster: CLUSTER_LOOSE },
-  { cx: 68,  cy: 204, s: 0.76, op: 0.40, cluster: CLUSTER_SINGLE },
-  { cx: 124, cy: 212, s: 0.70, op: 0.36, cluster: CLUSTER_SINGLE },
-  // Lower — single blossoms
-  { cx: 36,  cy: 272, s: 0.74, op: 0.40, cluster: CLUSTER_SINGLE },
-  { cx: 88,  cy: 288, s: 0.70, op: 0.36, cluster: CLUSTER_SINGLE },
-  { cx: 18,  cy: 324, s: 0.68, op: 0.36, cluster: CLUSTER_SINGLE },
-  { cx: 72,  cy: 346, s: 0.70, op: 0.38, cluster: CLUSTER_SINGLE },
-];
-
-// Right tree nodes — fewer at crown, heavier in mid, different twig directions
-const NODES_RIGHT: { cx: number; cy: number; s: number; op: number; cluster: number[][] }[] = [
-  // Crown — sparser, looser
-  { cx: 210, cy: 18,  s: 0.96, op: 0.54, cluster: CLUSTER_LOOSE },
-  { cx: 255, cy: 8,   s: 0.88, op: 0.50, cluster: CLUSTER_TIGHT },
-  { cx: 170, cy: 26,  s: 0.90, op: 0.52, cluster: CLUSTER_LOOSE },
-  { cx: 278, cy: 48,  s: 0.80, op: 0.44, cluster: CLUSTER_SINGLE },
-  { cx: 138, cy: 40,  s: 0.84, op: 0.48, cluster: CLUSTER_SPREAD },
-  // Upper mid — heavier clustering here
-  { cx: 230, cy: 62,  s: 0.92, op: 0.52, cluster: CLUSTER_TIGHT },
-  { cx: 188, cy: 68,  s: 0.94, op: 0.54, cluster: CLUSTER_TIGHT },
-  { cx: 110, cy: 80,  s: 0.86, op: 0.48, cluster: CLUSTER_TIGHT },
-  { cx: 262, cy: 84,  s: 0.78, op: 0.42, cluster: CLUSTER_SPREAD },
-  { cx: 158, cy: 100, s: 0.88, op: 0.50, cluster: CLUSTER_SPREAD },
-  { cx: 78,  cy: 106, s: 0.82, op: 0.46, cluster: CLUSTER_TIGHT },
-  { cx: 222, cy: 118, s: 0.80, op: 0.44, cluster: CLUSTER_SPREAD },
-  // Mid — mixed
-  { cx: 130, cy: 138, s: 0.78, op: 0.42, cluster: CLUSTER_TIGHT },
-  { cx: 56,  cy: 152, s: 0.80, op: 0.44, cluster: CLUSTER_SPREAD },
-  { cx: 186, cy: 148, s: 0.72, op: 0.38, cluster: CLUSTER_LOOSE },
-  { cx: 100, cy: 172, s: 0.76, op: 0.40, cluster: CLUSTER_SPREAD },
-  { cx: 30,  cy: 190, s: 0.70, op: 0.38, cluster: CLUSTER_LOOSE },
-  { cx: 156, cy: 188, s: 0.70, op: 0.36, cluster: CLUSTER_SINGLE },
-  { cx: 74,  cy: 220, s: 0.72, op: 0.38, cluster: CLUSTER_SPREAD },
-  { cx: 128, cy: 234, s: 0.68, op: 0.34, cluster: CLUSTER_SINGLE },
-  // Lower
-  { cx: 42,  cy: 285, s: 0.72, op: 0.40, cluster: CLUSTER_LOOSE },
-  { cx: 100, cy: 300, s: 0.68, op: 0.36, cluster: CLUSTER_SINGLE },
-  { cx: 22,  cy: 340, s: 0.66, op: 0.36, cluster: CLUSTER_SINGLE },
-  { cx: 78,  cy: 360, s: 0.70, op: 0.38, cluster: CLUSTER_SINGLE },
-];
-
-function TrunkLeft() {
-  const d = "M0 560 C14 500, 26 435, 40 365 C52 298, 64 228, 78 162 C88 112, 100 68, 110 28";
+// A single 5-petal sakura flower SVG group (centered at 0,0)
+function FlowerShape({ scale = 1, color = "#f0b8c8" }: { scale?: number; color?: string }) {
   return (
-    <g>
-      <path d={d} stroke="#7a5c3a" strokeWidth="9" strokeLinecap="round" fill="none" opacity="0.28" filter="url(#bark)" />
-      <path d={d} stroke="#7a5c3a" strokeWidth="5.5" strokeLinecap="round" fill="none" opacity="0.38" filter="url(#bark)" />
-      <path d={d} stroke="#6a4e2e" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.48" filter="url(#bark)" />
-    </g>
-  );
-}
-
-function TrunkRight() {
-  // Different curve — more upright at base, leaning out more at top
-  const d = "M0 560 C8 492, 18 422, 32 352 C46 282, 60 210, 76 148 C90 98, 108 56, 122 18";
-  return (
-    <g>
-      <path d={d} stroke="#7a5c3a" strokeWidth="8.5" strokeLinecap="round" fill="none" opacity="0.28" filter="url(#bark)" />
-      <path d={d} stroke="#7a5c3a" strokeWidth="5" strokeLinecap="round" fill="none" opacity="0.38" filter="url(#bark)" />
-      <path d={d} stroke="#6a4e2e" strokeWidth="2.2" strokeLinecap="round" fill="none" opacity="0.48" filter="url(#bark)" />
-    </g>
-  );
-}
-
-function BoughsLeft() {
-  const boughs: [string, number, number, number, number][] = [
-    ["M55 328 C88 285, 132 238, 178 190 C212 152, 250 112, 270 76", 7, 4, 1.8, 0.46],
-    ["M65 275 C100 248, 146 218, 186 186 C220 158, 252 130, 270 102", 6, 3.5, 1.5, 0.42],
-    ["M80 215 C64 182, 44 150, 22 120 C8 100, -4 78, -10 54", 5.5, 3.2, 1.4, 0.40],
-    ["M95 158 C98 122, 102 84, 108 44", 4.5, 2.8, 1.2, 0.36],
-  ];
-  return (
-    <g>
-      {boughs.map(([p, w0, w1, w2, op], i) => (
-        <g key={i}>
-          <path d={p} stroke="#7a5c3a" strokeWidth={w0} strokeLinecap="round" fill="none" opacity={op * 0.55} filter="url(#bark)" />
-          <path d={p} stroke="#7a5c3a" strokeWidth={w1} strokeLinecap="round" fill="none" opacity={op * 0.75} filter="url(#bark)" />
-          <path d={p} stroke="#6a4e2e" strokeWidth={w2} strokeLinecap="round" fill="none" opacity={op} filter="url(#bark)" />
-        </g>
+    <g transform={`scale(${scale})`}>
+      {[0, 72, 144, 216, 288].map((a) => (
+        <ellipse
+          key={a}
+          cx={0} cy={-8}
+          rx={3.2} ry={5.8}
+          fill={color}
+          transform={`rotate(${a})`}
+          opacity={0.92}
+        />
+      ))}
+      <circle cx={0} cy={0} r={2.2} fill="#fce8f0" opacity={0.95} />
+      {[0, 72, 144, 216, 288].map((a) => (
+        <circle
+          key={a}
+          cx={+(Math.sin((a * Math.PI) / 180) * 4.5).toFixed(2)}
+          cy={-(Math.cos((a * Math.PI) / 180) * 4.5).toFixed(2)}
+          r={0.7}
+          fill="#c47a90"
+          opacity={0.6}
+        />
       ))}
     </g>
   );
 }
 
-function BoughsRight() {
-  // Different spread — more vertical boughs, one sweeping low
-  const boughs: [string, number, number, number, number][] = [
-    ["M48 338 C72 295, 108 252, 148 208 C182 170, 224 130, 258 88", 7, 4, 1.8, 0.46],
-    ["M60 268 C78 228, 96 184, 112 144 C124 112, 136 78, 144 44", 6, 3.5, 1.5, 0.42],
-    ["M72 210 C52 176, 32 142, 14 108 C2 84, -6 62, -14 38", 5.5, 3.2, 1.4, 0.40],
-    ["M88 168 C112 148, 142 124, 168 98 C188 78, 208 56, 220 32", 5, 3, 1.3, 0.38],
-  ];
+// Single petal shape
+function PetalShape({ scale = 1 }: { scale?: number }) {
   return (
-    <g>
-      {boughs.map(([p, w0, w1, w2, op], i) => (
-        <g key={i}>
-          <path d={p} stroke="#7a5c3a" strokeWidth={w0} strokeLinecap="round" fill="none" opacity={op * 0.55} filter="url(#bark)" />
-          <path d={p} stroke="#7a5c3a" strokeWidth={w1} strokeLinecap="round" fill="none" opacity={op * 0.75} filter="url(#bark)" />
-          <path d={p} stroke="#6a4e2e" strokeWidth={w2} strokeLinecap="round" fill="none" opacity={op} filter="url(#bark)" />
-        </g>
-      ))}
+    <g transform={`scale(${scale})`}>
+      <ellipse cx={0} cy={-5} rx={3.0} ry={5.2} fill="#f0b8c8" opacity={0.88} />
     </g>
   );
 }
 
-function TwigsLeft() {
-  const twigs: [string, number, number][] = [
-    ["M120 252 C140 222, 158 194, 170 164", 2.8, 0.32],
-    ["M142 202 C160 178, 178 155, 195 130", 2.4, 0.30],
-    ["M108 170 C88 150, 66 130, 48 110", 2.2, 0.30],
-    ["M92 134 C72 114, 50 94, 32 74", 2.0, 0.28],
-    ["M105 104 C120 82, 138 64, 152 44", 2.0, 0.28],
-    ["M112 76 C95 60, 76 44, 60 28", 1.8, 0.26],
-    ["M40 382 C66 360, 96 342, 126 324", 2.8, 0.34],
-    ["M28 425 C10 405, -6 385, -12 362", 2.2, 0.28],
-    ["M35 458 C57 440, 80 424, 106 410", 2.2, 0.28],
-    ["M48 488 C28 470, 10 452, -5 432", 1.8, 0.24],
-  ];
-  return (
-    <g>
-      {twigs.map(([p, w, op], i) => (
-        <g key={i}>
-          <path d={p} stroke="#7a5c3a" strokeWidth={w * 1.8} strokeLinecap="round" fill="none" opacity={op * 0.45} filter="url(#bark)" />
-          <path d={p} stroke="#6a4e2e" strokeWidth={w} strokeLinecap="round" fill="none" opacity={op} filter="url(#bark)" />
-        </g>
-      ))}
-    </g>
-  );
+interface Particle {
+  id: number;
+  x: number;       // page coords
+  y: number;
+  type: "petal" | "flower";
+  // animation params
+  delay: number;
+  duration: number;
+  driftAmp: number;    // horizontal swing amplitude px
+  driftFreq: number;   // how many oscillations
+  driftPhase: number;  // starting phase
+  totalDrop: number;   // how far it falls px
+  rotStart: number;
+  rotEnd: number;
+  scale: number;
+  born: number;        // timestamp
 }
 
-function TwigsRight() {
-  // Twigs angled more vertically and a couple going outward
-  const twigs: [string, number, number][] = [
-    ["M110 248 C124 216, 140 186, 152 158", 2.8, 0.32],
-    ["M136 196 C148 166, 160 138, 170 110", 2.4, 0.30],
-    ["M100 162 C80 138, 58 116, 40 94", 2.2, 0.30],
-    ["M86 128 C64 106, 44 86, 26 66", 2.0, 0.28],
-    ["M100 96 C116 74, 134 56, 148 36", 2.0, 0.28],
-    ["M118 68 C100 52, 80 36, 64 20", 1.8, 0.26],
-    ["M44 376 C70 358, 100 340, 132 322", 2.8, 0.34],
-    ["M30 420 C14 400, -2 380, -10 358", 2.2, 0.28],
-    ["M38 454 C60 436, 84 420, 110 406", 2.2, 0.28],
-    ["M52 484 C32 466, 12 448, -4 428", 1.8, 0.24],
-    // Extra outward twig unique to right side
-    ["M168 92 C192 78, 218 62, 240 46", 1.6, 0.24],
-  ];
-  return (
-    <g>
-      {twigs.map(([p, w, op], i) => (
-        <g key={i}>
-          <path d={p} stroke="#7a5c3a" strokeWidth={w * 1.8} strokeLinecap="round" fill="none" opacity={op * 0.45} filter="url(#bark)" />
-          <path d={p} stroke="#6a4e2e" strokeWidth={w} strokeLinecap="round" fill="none" opacity={op} filter="url(#bark)" />
-        </g>
-      ))}
-    </g>
-  );
+let uid = 0;
+
+function useReducedMotion() {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReduced(mq.matches);
+    const h = (e: MediaQueryListEvent) => setReduced(e.matches);
+    mq.addEventListener("change", h);
+    return () => mq.removeEventListener("change", h);
+  }, []);
+  return reduced;
 }
 
-function SakuraSvg({
-  side,
-  onHit,
-}: {
-  side: "left" | "right";
-  onHit: (e: React.MouseEvent, cx: number, cy: number) => void;
-}) {
-  const nodes = side === "left" ? NODES_LEFT : NODES_RIGHT;
-  const filterId = side === "left" ? "bark-l" : "bark-r";
-
-  return (
-    <svg viewBox="-25 0 305 900" fill="none" xmlns="http://www.w3.org/2000/svg"
-      className="w-full h-full" style={{ overflow: "visible" }}>
-      <defs>
-        <filter id={filterId} x="-10%" y="-10%" width="120%" height="120%">
-          <feTurbulence type="fractalNoise" baseFrequency="0.065" numOctaves="2" seed={side === "left" ? 8 : 14} result="n" />
-          <feDisplacementMap in="SourceGraphic" in2="n" scale="1.2" xChannelSelector="R" yChannelSelector="G" />
-        </filter>
-      </defs>
-
-      {side === "left" ? <TrunkLeft /> : <TrunkRight />}
-      {side === "left" ? <BoughsLeft /> : <BoughsRight />}
-      {side === "left" ? <TwigsLeft /> : <TwigsRight />}
-
-      {nodes.map(({ cx, cy, s, op, cluster }, ni) => (
-        <g key={ni}>
-          {cluster.map(([dx, dy, sr, rot], bi) => (
-            <Blossom key={bi} x={cx + (dx as number)} y={cy + (dy as number)}
-              s={s * (sr as number)} op={op * (0.85 + bi * 0.04)} rot={rot as number} />
-          ))}
-          <circle cx={cx} cy={cy} r={32} fill="transparent"
-            className="sakura-hit" onClick={(e) => onHit(e, cx, cy)} />
-        </g>
-      ))}
-    </svg>
-  );
-}
+const MAX_PARTICLES = 40;
 
 export function SakuraCorner() {
-  const [petals, setPetals] = useState<FallingPetal[]>([]);
+  const [particles, setParticles] = useState<Particle[]>([]);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const reducedMotion = useReducedMotion();
 
-  const onHit = useCallback((e: React.MouseEvent, svgX: number, svgY: number) => {
-    const svg = (e.target as Element).closest("svg") as SVGSVGElement | null;
-    if (!svg) return;
-    const rect = svg.getBoundingClientRect();
-    const pageX = rect.left + ((svgX + 25) / 305) * rect.width;
-    const pageY = rect.top  + (svgY / 900) * rect.height;
+  const handleClick = useCallback(() => {
+    if (reducedMotion) return;
+    if (!svgRef.current) return;
 
-    const count = 4 + Math.floor(Math.random() * 4);
-    const newPetals: FallingPetal[] = Array.from({ length: count }, (_, i) => ({
-      id: nextId++,
-      x: pageX + (Math.random() - 0.5) * 20,
-      y: pageY + (Math.random() - 0.5) * 10,
-      drift: `${(Math.random() - 0.5) * 85}px`,
-      spin: `${(Math.random() > 0.5 ? 1 : -1) * (140 + Math.random() * 260)}deg`,
-      duration: `${2.2 + Math.random() * 1.4}s`,
-      delay: `${i * 0.07 + Math.random() * 0.18}s`,
-      scale: 0.45 + Math.random() * 0.5,
-    }));
+    const rect = svgRef.current.getBoundingClientRect();
+    const vbW = 600, vbH = 400;
+    const scaleX = rect.width / vbW;
+    const scaleY = rect.height / vbH;
 
-    setPetals(prev => [...prev, ...newPetals]);
-    newPetals.forEach(p => {
-      const ms = (parseFloat(p.duration) + parseFloat(p.delay) + 0.1) * 1000;
-      setTimeout(() => setPetals(prev => prev.filter(x => x.id !== p.id)), ms);
+    // Pick 2–4 flowers to emit from
+    const shuffled = [...FLOWERS].sort(() => 0.5 - Math.random());
+    const emitters = shuffled.slice(0, 2 + Math.floor(Math.random() * 3));
+
+    const now = performance.now();
+    const newParticles: Particle[] = [];
+
+    emitters.forEach((flower) => {
+      const px = rect.left + flower.x * scaleX;
+      const py = rect.top  + flower.y * scaleY;
+      // 3–5 particles per emitter
+      const count = 3 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < count; i++) {
+        const isPetal = Math.random() < 0.8;
+        newParticles.push({
+          id: uid++,
+          x: px + (Math.random() - 0.5) * 12,
+          y: py + (Math.random() - 0.5) * 8,
+          type: isPetal ? "petal" : "flower",
+          delay: i * 60 + Math.random() * 120,
+          duration: isPetal
+            ? 1500 + Math.random() * 800
+            : 1800 + Math.random() * 600,
+          driftAmp: 18 + Math.random() * 28,
+          driftFreq: 1.2 + Math.random() * 1.4,
+          driftPhase: Math.random() * Math.PI * 2,
+          totalDrop: 120 + Math.random() * 100,
+          rotStart: Math.random() * 360,
+          rotEnd: (Math.random() > 0.5 ? 1 : -1) * (80 + Math.random() * 200),
+          scale: isPetal
+            ? 0.55 + Math.random() * 0.4
+            : 0.5 + Math.random() * 0.35,
+          born: now,
+        });
+      }
     });
-  }, []);
+
+    setParticles((prev) => {
+      const combined = [...prev, ...newParticles];
+      return combined.slice(-MAX_PARTICLES);
+    });
+  }, [reducedMotion]);
+
+  // RAF loop for particle animation
+  useEffect(() => {
+    if (particles.length === 0) return;
+    let raf: number;
+
+    const loop = () => {
+      const now = performance.now();
+      setParticles((prev) => prev.filter((p) => {
+        const elapsed = now - p.born - p.delay;
+        return elapsed < p.duration + 100;
+      }));
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, [particles.length]);
 
   return (
     <>
-      <div className="sakura-corner sakura-corner-left" aria-hidden>
-        <SakuraSvg side="left" onHit={onHit} />
-      </div>
-      <div className="sakura-corner sakura-corner-right" aria-hidden>
-        <SakuraSvg side="right" onHit={onHit} />
+      {/* Branch SVG — fixed to right side, entering from middle-right */}
+      <div
+        className="sakura-branch-wrap"
+        aria-label="Decorative cherry blossom branch"
+        aria-hidden="true"
+      >
+        <svg
+          ref={svgRef}
+          viewBox="0 0 600 400"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="sakura-branch-svg"
+          onClick={handleClick}
+          style={{ cursor: "pointer", overflow: "visible" }}
+        >
+          {/* ── PRIMARY BRANCH ── enters from right ~middle, curves left+up */}
+          {/* Drawn as layered strokes for tapered organic look */}
+          {[
+            ["M600 218 C558 210, 510 196, 468 178 C432 162, 400 148, 372 138 C348 130, 326 126, 306 122 C284 118, 262 118, 242 120", 9,   "#5a3e28", 0.70],
+            ["M600 218 C558 210, 510 196, 468 178 C432 162, 400 148, 372 138 C348 130, 326 126, 306 122 C284 118, 262 118, 242 120", 5.5, "#5a3e28", 0.82],
+            ["M600 218 C558 210, 510 196, 468 178 C432 162, 400 148, 372 138 C348 130, 326 126, 306 122 C284 118, 262 118, 242 120", 2.2, "#3d2818", 0.90],
+          ].map(([d, w, color, op], i) => (
+            <path key={i} d={d as string} stroke={color as string} strokeWidth={w as number}
+              strokeLinecap="round" fill="none" opacity={op as number} />
+          ))}
+
+          {/* ── SECONDARY BRANCH — forks upward from ~x=420 */}
+          {[
+            ["M420 164 C408 148, 394 130, 378 112 C366 98, 352 86, 340 76", 5.5, "#5a3e28", 0.68],
+            ["M420 164 C408 148, 394 130, 378 112 C366 98, 352 86, 340 76", 3.2, "#5a3e28", 0.78],
+            ["M420 164 C408 148, 394 130, 378 112 C366 98, 352 86, 340 76", 1.4, "#3d2818", 0.88],
+          ].map(([d, w, color, op], i) => (
+            <path key={i} d={d as string} stroke={color as string} strokeWidth={w as number}
+              strokeLinecap="round" fill="none" opacity={op as number} />
+          ))}
+
+          {/* ── SECONDARY BRANCH — continues left, drops slightly */}
+          {[
+            ["M306 122 C288 124, 268 130, 248 140 C232 148, 218 158, 206 168", 4.2, "#5a3e28", 0.64],
+            ["M306 122 C288 124, 268 130, 248 140 C232 148, 218 158, 206 168", 2.4, "#5a3e28", 0.75],
+            ["M306 122 C288 124, 268 130, 248 140 C232 148, 218 158, 206 168", 1.1, "#3d2818", 0.86],
+          ].map(([d, w, color, op], i) => (
+            <path key={i} d={d as string} stroke={color as string} strokeWidth={w as number}
+              strokeLinecap="round" fill="none" opacity={op as number} />
+          ))}
+
+          {/* ── TWIGS — thin, attached near flowers ── */}
+          {/* twig near flower 0: (312,148) */}
+          <path d="M340 134 C330 140, 320 144, 312 148" stroke="#4a3020" strokeWidth="1.0" strokeLinecap="round" fill="none" opacity="0.80" />
+          {/* twig near flower 1: (348,118) */}
+          <path d="M360 106 C356 110, 352 114, 348 118" stroke="#4a3020" strokeWidth="0.9" strokeLinecap="round" fill="none" opacity="0.78" />
+          {/* twig near flower 2: (274,132) */}
+          <path d="M282 120 C279 125, 277 129, 274 132" stroke="#4a3020" strokeWidth="0.9" strokeLinecap="round" fill="none" opacity="0.76" />
+          {/* twig near flower 3: (388,96) */}
+          <path d="M378 92 C382 93, 386 94, 388 96" stroke="#4a3020" strokeWidth="0.85" strokeLinecap="round" fill="none" opacity="0.74" />
+          {/* twig near flower 4: (240,108) from secondary */}
+          <path d="M248 118 C245 114, 242 111, 240 108" stroke="#4a3020" strokeWidth="0.85" strokeLinecap="round" fill="none" opacity="0.74" />
+          {/* twig near flower 5: (418,134) */}
+          <path d="M426 126 C424 129, 421 132, 418 134" stroke="#4a3020" strokeWidth="0.80" strokeLinecap="round" fill="none" opacity="0.72" />
+          {/* twig near flower 6: (352,168) */}
+          <path d="M360 158 C357 162, 354 165, 352 168" stroke="#4a3020" strokeWidth="0.80" strokeLinecap="round" fill="none" opacity="0.70" />
+          {/* twig near flower 7: (210,148) from secondary end */}
+          <path d="M214 158 C212 154, 211 151, 210 148" stroke="#4a3020" strokeWidth="0.75" strokeLinecap="round" fill="none" opacity="0.68" />
+          {/* twig near flower 8: (455,112) */}
+          <path d="M462 118 C459 115, 457 113, 455 112" stroke="#4a3020" strokeWidth="0.75" strokeLinecap="round" fill="none" opacity="0.68" />
+          {/* twig near flower 9: (290,172) */}
+          <path d="M298 162 C295 166, 292 169, 290 172" stroke="#4a3020" strokeWidth="0.75" strokeLinecap="round" fill="none" opacity="0.68" />
+
+          {/* ── FLOWERS ── */}
+          {FLOWERS.map((f, i) => (
+            <g key={i} transform={`translate(${f.x},${f.y}) rotate(${f.rot})`}>
+              <FlowerShape scale={f.r * 1.1} color="#f0b8c8" />
+            </g>
+          ))}
+        </svg>
       </div>
 
-      {petals.map(p => (
-        <svg key={p.id} width="20" height="20" viewBox="-10 -10 20 20"
-          style={{
-            position: "fixed",
-            left: p.x, top: p.y,
-            pointerEvents: "none",
-            zIndex: 9999,
-            ["--petal-drift" as string]: p.drift,
-            ["--petal-spin" as string]: p.spin,
-            animation: `petal-fall ${p.duration} ${p.delay} ease-in forwards`,
-            transformOrigin: "center",
-            scale: String(p.scale),
-          }}
-        >
-          <ellipse cx="0" cy="-5" rx="3.2" ry="5.2" fill="#f2a8bc" opacity="0.85" />
-          <circle cx="0" cy="0" r="1.5" fill="#fbd8e4" opacity="0.70" />
-        </svg>
+      {/* ── FALLING PARTICLES ── rendered as fixed-positioned elements */}
+      {particles.map((p) => (
+        <FallingParticle key={p.id} p={p} />
       ))}
     </>
+  );
+}
+
+function FallingParticle({ p }: { p: Particle }) {
+  const ref = useRef<SVGSVGElement>(null);
+  const rafRef = useRef<number>(0);
+
+  useEffect(() => {
+    const start = performance.now() + p.delay;
+    const el = ref.current;
+    if (!el) return;
+    el.style.opacity = "0";
+
+    const tick = (now: number) => {
+      if (now < start) {
+        rafRef.current = requestAnimationFrame(tick);
+        return;
+      }
+      const t = Math.min((now - start) / p.duration, 1);
+
+      // Sinusoidal horizontal drift
+      const dx = p.driftAmp * Math.sin(p.driftFreq * t * Math.PI * 2 + p.driftPhase);
+      // Accelerating drop (ease-in feel)
+      const dy = p.totalDrop * (t * t * 0.6 + t * 0.4);
+      // Rotation
+      const rot = p.rotStart + p.rotEnd * t;
+      // Fade: full opacity until 65%, then fade out
+      const opacity = t < 0.65 ? 0.85 : 0.85 * (1 - (t - 0.65) / 0.35);
+
+      el.style.transform = `translate(${dx}px, ${dy}px) rotate(${rot}deg)`;
+      el.style.opacity = String(opacity);
+
+      if (t < 1) {
+        rafRef.current = requestAnimationFrame(tick);
+      } else {
+        el.style.opacity = "0";
+      }
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [p]);
+
+  const size = p.type === "flower" ? 22 : 16;
+
+  return (
+    <svg
+      ref={ref}
+      width={size}
+      height={size}
+      viewBox={`-${size / 2} -${size / 2} ${size} ${size}`}
+      style={{
+        position: "fixed",
+        left: p.x,
+        top: p.y,
+        pointerEvents: "none",
+        zIndex: 9999,
+        opacity: 0,
+        willChange: "transform, opacity",
+      }}
+    >
+      {p.type === "petal" ? (
+        <PetalShape scale={p.scale} />
+      ) : (
+        <FlowerShape scale={p.scale * 0.7} color="#f2bfce" />
+      )}
+    </svg>
   );
 }
