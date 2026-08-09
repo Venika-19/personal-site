@@ -97,18 +97,21 @@ body {
   color: var(--color-ink);
 }
 
+/* sakura petal color — darker in light mode so it shows against cream bg */
+:root  { --sakura-petal: #c8607a; --sakura-center: #fce0e8; --sakura-stamen: #a04060; }
+.dark  { --sakura-petal: #f0b8c8; --sakura-center: #fce8f0; --sakura-stamen: #b86880; }
+
 .sakura-branch-wrap {
   position: fixed;
-  top: 28%;
-  width: min(480px, 40vw);
+  width: min(500px, 42vw);
   height: auto;
   pointer-events: none;
   z-index: 40;
   transform: translateY(-50%);
 }
 
-.sakura-branch-right { right: 0; }
-.sakura-branch-left  { left: 0; }
+.sakura-branch-right { right: 0; top: 46%; }
+.sakura-branch-left  { left: 0; top: 16%; }
 
 .sakura-branch-svg {
   width: 100%;
