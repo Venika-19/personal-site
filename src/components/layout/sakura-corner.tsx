@@ -22,6 +22,19 @@ const FLOWERS_RIGHT: FlowerDef[] = [
   { x: 330, y: 106, r: 0.68, rot: -42 },
   { x: 186, y: 156, r: 0.62, rot:  20 },
   { x: 226, y: 128, r: 0.64, rot: -15 },
+  // extra cluster on main arm
+  { x: 500, y: 174, r: 0.66, rot:  28 },
+  { x: 524, y: 196, r: 0.61, rot: -44 },
+  { x: 446, y: 152, r: 0.64, rot:  18 },
+  { x: 258, y: 158, r: 0.63, rot: -38 },
+  // extra on upper fork
+  { x: 356, y:  62, r: 0.68, rot:  48 },
+  { x: 376, y:  46, r: 0.62, rot: -25 },
+  { x: 342, y:  88, r: 0.66, rot:  70 },
+  // scatter on left arm
+  { x: 196, y: 170, r: 0.60, rot:  32 },
+  { x: 172, y: 178, r: 0.58, rot: -52 },
+  { x: 218, y: 164, r: 0.62, rot:   8 },
 ];
 
 // Left branch — more flowers, more branches
@@ -51,6 +64,25 @@ const FLOWERS_LEFT: FlowerDef[] = [
   // small outliers
   { x: 116, y: 196, r: 0.60, rot: -8  },
   { x: 318, y: 116, r: 0.62, rot:  25 },
+  // extra fill on main arm
+  { x:  86, y: 174, r: 0.68, rot:  42 },
+  { x: 128, y: 148, r: 0.66, rot: -35 },
+  { x: 174, y: 126, r: 0.70, rot:  16 },
+  { x: 222, y: 112, r: 0.64, rot: -55 },
+  { x: 268, y: 104, r: 0.66, rot:  34 },
+  { x: 314, y:  98, r: 0.62, rot: -22 },
+  { x: 356, y:  96, r: 0.60, rot:  58 },
+  // extra on upper fork
+  { x:  74, y:  96, r: 0.68, rot: -18 },
+  { x:  52, y:  62, r: 0.64, rot:  40 },
+  { x:  38, y:  30, r: 0.60, rot: -60 },
+  // extra on down-right sub
+  { x: 238, y: 156, r: 0.62, rot:  50 },
+  { x: 278, y: 172, r: 0.60, rot: -30 },
+  { x: 310, y: 186, r: 0.58, rot:  20 },
+  // twig off far-right
+  { x: 390, y: 114, r: 0.58, rot: -44 },
+  { x: 424, y: 130, r: 0.56, rot:  26 },
 ];
 
 // 5-petal flower using CSS variable for color — visible in both light and dark
