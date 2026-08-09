@@ -172,7 +172,7 @@ function spawnFromBranch(rect: DOMRect, flowers: FlowerDef[]): Particle[] {
 }
 
 // Layered branch stroke helper
-type BranchSpec = [string, number, number, number];
+type BranchSpec = [string, number, string, number];
 
 function Branch({ specs }: { specs: BranchSpec[] }) {
   return (
