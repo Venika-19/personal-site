@@ -99,14 +99,16 @@ body {
 
 .sakura-branch-wrap {
   position: fixed;
-  right: 0;
-  top: 30%;
-  width: min(520px, 48vw);
+  top: 28%;
+  width: min(480px, 40vw);
   height: auto;
   pointer-events: none;
   z-index: 40;
   transform: translateY(-50%);
 }
+
+.sakura-branch-right { right: 0; }
+.sakura-branch-left  { left: 0; }
 
 .sakura-branch-svg {
   width: 100%;
@@ -115,7 +117,7 @@ body {
   pointer-events: all;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 960px) {
   .sakura-branch-wrap { display: none; }
 }
 
