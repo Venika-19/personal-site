@@ -156,11 +156,11 @@ function spawnFromBranch(rect: DOMRect, flowers: FlowerDef[]): Particle[] {
         y: py + (Math.random() - 0.5) * 7,
         type: isPetal ? "petal" : "flower",
         delay: i * 55 + Math.random() * 100,
-        duration: isPetal ? 1600 + Math.random() * 700 : 1900 + Math.random() * 500,
+        duration: isPetal ? 2600 + Math.random() * 900 : 3000 + Math.random() * 800,
         driftAmp:   4 + Math.random() * 7,
         driftFreq:  0.3 + Math.random() * 0.4,
         driftPhase: Math.random() * Math.PI * 2,
-        totalDrop: 110 + Math.random() * 90,
+        totalDrop: 260 + Math.random() * 140,
         rotStart: Math.random() * 360,
         rotEnd: (Math.random() > 0.5 ? 1 : -1) * (50 + Math.random() * 100),
         scale: isPetal ? 0.5 + Math.random() * 0.38 : 0.44 + Math.random() * 0.28,
@@ -365,7 +365,7 @@ function FallingParticle({ p }: { p: Particle }) {
       const dx = p.driftAmp * Math.sin(p.driftFreq * t * Math.PI * 2 + p.driftPhase);
       const dy = p.totalDrop * (t * t * 0.55 + t * 0.45);
       const rot = p.rotStart + p.rotEnd * t;
-      const opacity = t < 0.62 ? 0.82 : 0.82 * (1 - (t - 0.62) / 0.38);
+      const opacity = t < 0.82 ? 0.82 : 0.82 * (1 - (t - 0.82) / 0.18);
       el.style.transform = `translate(${dx}px, ${dy}px) rotate(${rot}deg)`;
       el.style.opacity = String(Math.max(0, opacity));
       if (t < 1) rafRef.current = requestAnimationFrame(tick);
