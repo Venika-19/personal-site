@@ -1,3 +1,11 @@
+---
+title: "Acquisition and Retention of Information in the age of AI"
+description: "[Infomation ingestion efficieny has to be improved in order to be able to retain the infomration and retrive it in a the best way. The note explores the fallback in the AI age, the importance of it and what can be done]"
+date: "2026-08-16"
+status: "seedling"
+tags: ["AI", "memory", "information", "thinking"]
+---
+
 Information has become extremely abundant. The way information was available kept improving through the years. Information is available for ingestion in the most quickest way possible with the introduction of AI. AI is able to pull information from different sources, deduplicate them, contextualize according to our need and summarise it in a very efficient way possible. Quick chunks of information is being thrown at us in the form of reels, youtube shorts etc. One might think that they are ingesting and learning a lot of information in this way. But I don't think this is the most efficient way in which information can be ingested which can lead to better retention of the information gained. To understand this further, we need to dive into how memory is retained and what is the most efficient way of information gaining and how does brain process information gained in different forms. 
 
 The reason I started exploring this is, in the last few months I have had a burst of curiosity and I started reading different topics with the help of AI, not books. If I was interested in understanding the ideas of nihilism and absurdism, I had discussions with AI on what I feel and it would give me more historic thoughts which were debated and discussed. This way I learnt a lot
@@ -13,4 +21,4 @@ If you don't know why, either u will adopt the new pattern without having comple
 
 First one is a bit better because at least you are thinking in the information available to you but the latter is dangerous. 
 
-Now that I told you, what led to my interest in this topic, I am going to research more about it. 
+Now that I told you, what led to my interest in this topic, I am going to research more about it.
