@@ -214,6 +214,18 @@ export function SakuraCorner() {
         <svg ref={rightRef} viewBox="0 0 600 400" fill="none"
           className="sakura-branch-svg" onClick={handleRight}
           style={{ cursor: "pointer", overflow: "visible" }}>
+          <defs>
+            {/* Fades out near the right entry edge (x=600) */}
+            <linearGradient id="fade-r" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%"   stopColor="white" stopOpacity="1" />
+              <stop offset="72%"  stopColor="white" stopOpacity="1" />
+              <stop offset="100%" stopColor="white" stopOpacity="0" />
+            </linearGradient>
+            <mask id="mask-r" maskContentUnits="objectBoundingBox">
+              <rect width="1" height="1" fill="url(#fade-r)" />
+            </mask>
+          </defs>
+          <g mask="url(#mask-r)">
           {/* Primary */}
           <Branch specs={[
             ["M600 218 C558 210, 510 196, 468 178 C432 162, 400 148, 372 138 C348 130, 326 126, 306 122 C284 118, 262 118, 242 120", 8.5, "5a3e28", 0.62],
@@ -259,6 +271,7 @@ export function SakuraCorner() {
               <FlowerShape scale={f.r} petalOp={0.72} />
             </g>
           ))}
+          </g>{/* end mask-r group */}
         </svg>
       </div>
 
@@ -267,6 +280,18 @@ export function SakuraCorner() {
         <svg ref={leftRef} viewBox="0 0 600 400" fill="none"
           className="sakura-branch-svg" onClick={handleLeft}
           style={{ cursor: "pointer", overflow: "visible" }}>
+          <defs>
+            {/* Left branch enters from left (x=0), so fade at x=0 end */}
+            <linearGradient id="fade-l" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%"   stopColor="white" stopOpacity="0" />
+              <stop offset="28%"  stopColor="white" stopOpacity="1" />
+              <stop offset="100%" stopColor="white" stopOpacity="1" />
+            </linearGradient>
+            <mask id="mask-l" maskContentUnits="objectBoundingBox">
+              <rect width="1" height="1" fill="url(#fade-l)" />
+            </mask>
+          </defs>
+          <g mask="url(#mask-l)">
           {/* Flip horizontally around the centre of the viewBox (x=300) */}
           <g transform="scale(-1,1) translate(-600,0)">
             <Branch specs={[
@@ -311,7 +336,8 @@ export function SakuraCorner() {
                 <FlowerShape scale={f.r} petalOp={0.72} />
               </g>
             ))}
-          </g>
+          </g>{/* end flip group */}
+          </g>{/* end mask-l group */}
         </svg>
       </div>
 
