@@ -355,7 +355,8 @@ export function SakuraCorner() {
       <div className="sakura-branch-wrap sakura-branch-left" aria-hidden="true">
         <svg ref={leftRef} viewBox="0 0 600 400" fill="none"
           className="sakura-branch-svg" onClick={handleLeft}
-          style={{ cursor: "pointer", overflow: "visible" }}>
+          style={{ cursor: "pointer", overflow: "visible",
+            opacity: dimLeft ? 0.25 : 1, transition: "opacity 400ms ease" }}>
           <defs>
             {/* Left branch enters from left (x=0), so fade at x=0 end */}
             <linearGradient id="fade-l" x1="0" y1="0" x2="1" y2="0">

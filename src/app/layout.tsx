@@ -39,7 +39,7 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: siteConfig.title,
+    default: "Venika",
     template: `%s — ${siteConfig.name}`,
   },
   description: siteConfig.description,
