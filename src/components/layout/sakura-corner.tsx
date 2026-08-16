@@ -177,11 +177,70 @@ function Branch({ specs }: { specs: BranchSpec[] }) {
   );
 }
 
+// Does the flower region of a branch svg overlap any visible text in <main>?
+// The flowers sit in the interior half of the viewBox nearest the content,
+// so we test that region's on-screen box against each text element's box.
+function branchOverlapsText(svg: SVGSVGElement | null): boolean {
+  if (!svg) return false;
+  const main = document.getElementById("main");
+  if (!main) return false;
+
+  const box = svg.getBoundingClientRect();
+  if (box.width === 0) return false;
+
+  // Flowers live roughly within x∈[172,524], y∈[46,196] of a 0–600 / 0–400 vb.
+  const sx = box.width / VBW;
+  const sy = box.height / VBH;
+  const flowerBox = {
+    left: box.left + 172 * sx,
+    right: box.left + 524 * sx,
+    top: box.top + 46 * sy,
+    bottom: box.top + 196 * sy,
+  };
+
+  const nodes = main.querySelectorAll(
+    "h1, h2, h3, h4, p, li, blockquote, time, a, span"
+  );
+  for (const node of nodes) {
+    if (!node.textContent?.trim()) continue;
+    const r = node.getBoundingClientRect();
+    if (r.width === 0 || r.height === 0) continue;
+    const overlaps =
+      r.left < flowerBox.right &&
+      r.right > flowerBox.left &&
+      r.top < flowerBox.bottom &&
+      r.bottom > flowerBox.top;
+    if (overlaps) return true;
+  }
+  return false;
+}
+
 export function SakuraCorner() {
   const [particles, setParticles] = useState<Particle[]>([]);
+  const [dimRight, setDimRight] = useState(false);
+  const [dimLeft, setDimLeft] = useState(false);
   const rightRef = useRef<SVGSVGElement>(null);
   const leftRef  = useRef<SVGSVGElement>(null);
   const reduced  = useReducedMotion();
+
+  useEffect(() => {
+    let raf = 0;
+    const measure = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        setDimRight(branchOverlapsText(rightRef.current));
+        setDimLeft(branchOverlapsText(leftRef.current));
+      });
+    };
+    measure();
+    window.addEventListener("scroll", measure, { passive: true });
+    window.addEventListener("resize", measure);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", measure);
+      window.removeEventListener("resize", measure);
+    };
+  }, []);
 
   const handleRight = useCallback(() => {
     if (reduced || !rightRef.current) return;
@@ -213,7 +272,8 @@ export function SakuraCorner() {
       <div className="sakura-branch-wrap sakura-branch-right" aria-hidden="true">
         <svg ref={rightRef} viewBox="0 0 600 400" fill="none"
           className="sakura-branch-svg" onClick={handleRight}
-          style={{ cursor: "pointer", overflow: "visible" }}>
+          style={{ cursor: "pointer", overflow: "visible",
+            opacity: dimRight ? 0.25 : 1, transition: "opacity 400ms ease" }}>
           <defs>
             {/* Fades out near the right entry edge (x=600) */}
             <linearGradient id="fade-r" x1="0" y1="0" x2="1" y2="0">

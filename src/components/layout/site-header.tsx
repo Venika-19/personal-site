@@ -7,6 +7,31 @@ import { Command, Menu, X } from "lucide-react";
 import { siteConfig } from "@/lib/config";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 
+function FlowerLogo() {
+  return (
+    <svg
+      width={20}
+      height={20}
+      viewBox="-16 -16 32 32"
+      aria-hidden="true"
+      className="shrink-0"
+    >
+      {[0, 72, 144, 216, 288].map((a) => (
+        <ellipse
+          key={a}
+          cx={0}
+          cy={-8}
+          rx={4.4}
+          ry={8}
+          fill="var(--sakura-petal)"
+          transform={`rotate(${a})`}
+        />
+      ))}
+      <circle cx={0} cy={0} r={3} fill="var(--sakura-center)" />
+    </svg>
+  );
+}
+
 export function SiteHeader() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -20,8 +45,10 @@ export function SiteHeader() {
       <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-5">
         <Link
           href="/"
-          className="font-display text-base font-semibold tracking-tight text-ink"
+          className="flex items-center gap-2 font-display text-base font-semibold tracking-tight text-ink"
+          aria-label={`${siteConfig.name} — home`}
         >
+          <FlowerLogo />
           {siteConfig.initials}
         </Link>
 
