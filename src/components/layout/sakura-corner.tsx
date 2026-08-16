@@ -177,10 +177,26 @@ function Branch({ specs }: { specs: BranchSpec[] }) {
   );
 }
 
+// Bounding box (in viewBox units) of the flowers for a branch, padded for
+// petal radius so the edges aren't clipped.
+function flowerBounds(flowers: FlowerDef[]) {
+  const pad = 24;
+  const xs = flowers.map((f) => f.x);
+  const ys = flowers.map((f) => f.y);
+  return {
+    minX: Math.min(...xs) - pad,
+    maxX: Math.max(...xs) + pad,
+    minY: Math.min(...ys) - pad,
+    maxY: Math.max(...ys) + pad,
+  };
+}
+
 // Does the flower region of a branch svg overlap any visible text in <main>?
-// The flowers sit in the interior half of the viewBox nearest the content,
-// so we test that region's on-screen box against each text element's box.
-function branchOverlapsText(svg: SVGSVGElement | null): boolean {
+// We test the flowers' on-screen box against each text element's box.
+function branchOverlapsText(
+  svg: SVGSVGElement | null,
+  flowers: FlowerDef[]
+): boolean {
   if (!svg) return false;
   const main = document.getElementById("main");
   if (!main) return false;
@@ -188,14 +204,14 @@ function branchOverlapsText(svg: SVGSVGElement | null): boolean {
   const box = svg.getBoundingClientRect();
   if (box.width === 0) return false;
 
-  // Flowers live roughly within x∈[172,524], y∈[46,196] of a 0–600 / 0–400 vb.
+  const b = flowerBounds(flowers);
   const sx = box.width / VBW;
   const sy = box.height / VBH;
   const flowerBox = {
-    left: box.left + 172 * sx,
-    right: box.left + 524 * sx,
-    top: box.top + 46 * sy,
-    bottom: box.top + 196 * sy,
+    left: box.left + b.minX * sx,
+    right: box.left + b.maxX * sx,
+    top: box.top + b.minY * sy,
+    bottom: box.top + b.maxY * sy,
   };
 
   const nodes = main.querySelectorAll(
@@ -228,8 +244,8 @@ export function SakuraCorner() {
     const measure = () => {
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => {
-        setDimRight(branchOverlapsText(rightRef.current));
-        setDimLeft(branchOverlapsText(leftRef.current));
+        setDimRight(branchOverlapsText(rightRef.current, FLOWERS_RIGHT));
+        setDimLeft(branchOverlapsText(leftRef.current, FLOWERS_LEFT));
       });
     };
     measure();
